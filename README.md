@@ -1,5 +1,6 @@
 # CS 100 Programming Project
-Fall 2019
+Fall 2019  
+
 Ford St. John, 862125078
 Tanner Cohen
 
