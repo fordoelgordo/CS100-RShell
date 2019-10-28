@@ -57,19 +57,18 @@ We also tested the functioning of fork(), execvp() and waitpid()...
 
 ## Development and Testing Roadmap
 1. Create Parser class [#1](https://github.com/cs100/assignment-git_shorty_assn/issues/1)
-   1. Create unit tests to ensure Parser class correctly parses user input 
-   1. Create unit test to ensure Parser correctly creates Executable objects
-   1. Create unit test to ensure Executable children are created correctly
-1. Create Connector superclass 
-1. Create Connector subclasses and associated functionality
-   1. Create unit test ensuring correct Connector method is called on parsed user input
-1. Create Executable class
-   1. Create unit tests to ensure Executable object runs the correct shell executable associated with the user input
-   1. Create integration test to ensure Executables work with Connector class to execute correct chain of arguments
-1. Create ExecuteCommand interface
-   1. Create unit test to ensure list of executables executes in the correct order with correct error outputs
-1. Create integration test for Parser and ExecuteCommand
-able
-1. Create integartion test that tests functionality of entire system with "client" interface
+   1. Create unit tests to ensure Parser class correctly parses user input [#2](https://github.com/cs100/assignment-git_shorty_assn/issues/2)
+   1. Create unit test to ensure Parser correctly creates Executable objects [#3](https://github.com/cs100/assignment-git_shorty_assn/issues/3)
+   1. Create unit test to ensure Executable children are created correctly [#4](https://github.com/cs100/assignment-git_shorty_assn/issues/4)
+1. Create Connector superclass [#5](https://github.com/cs100/assignment-git_shorty_assn/issues/5)
+1. Create Connector subclasses and associated functionality [#6](https://github.com/cs100/assignment-git_shorty_assn/issues/6)
+   1. Create unit test ensuring correct Connector method is called on parsed user input [#7](https://github.com/cs100/assignment-git_shorty_assn/issues/7)
+1. Create Executable class [#8](https://github.com/cs100/assignment-git_shorty_assn/issues/8)
+   1. Create unit tests to ensure Executable object runs the correct shell executable associated with the user input [#9](https://github.com/cs100/assignment-git_shorty_assn/issues/9)
+   1. Create integration test to ensure Executables work with Connector class to execute correct chain of arguments [#10](https://github.com/cs100/assignment-git_shorty_assn/issues/10)
+1. Create ExecuteCommand interface [#11](https://github.com/cs100/assignment-git_shorty_assn/issues/11)
+   1. Create unit test to ensure list of executables executes in the correct order with correct error outputs [#12](https://github.com/cs100/assignment-git_shorty_assn/issues/12) [#13](https://github.com/cs100/assignment-git_shorty_assn/issues/13)
+1. Create integration test for Parser and ExecuteCommand [#14](https://github.com/cs100/assignment-git_shorty_assn/issues/14)
+1. Create integartion test that tests functionality of entire system with "client" interface [#15](https://github.com/cs100/assignment-git_shorty_assn/issues/15)
 
 
