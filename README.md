@@ -57,17 +57,17 @@ We also tested the functioning of fork(), execvp() and waitpid()...
 
 ## Development and Testing Roadmap
 1. Create Parser class
- 1. Create unit tests to ensure Parser class correctly parses user input
- 1. Create unit test to ensure Parser correctly creates Executable objects
- 1. Create unit test to ensure Executable children are created correctly
+   1. Create unit tests to ensure Parser class correctly parses user input
+   1. Create unit test to ensure Parser correctly creates Executable objects
+   1. Create unit test to ensure Executable children are created correctly
 1. Create Connector superclass 
 1. Create Connector subclasses and associated functionality
- 1. Create unit test ensuring correct Connector method is called on parsed user input
+   1. Create unit test ensuring correct Connector method is called on parsed user input
 1. Create Executable class
- 1. Create unit tests to ensure Executable object runs the correct shell executable associated with the user input
- 1. Create integration test to ensure Executables work with Connector class to execute correct chain of arguments
+   1. Create unit tests to ensure Executable object runs the correct shell executable associated with the user input
+   1. Create integration test to ensure Executables work with Connector class to execute correct chain of arguments
 1. Create ExecuteCommand interface
- 1. Create unit test to ensure list of executables executes in the correct order with correct error outputs
+   1. Create unit test to ensure list of executables executes in the correct order with correct error outputs
 1. Create integration test for Parser and ExecuteCommand
 able
 1. Create integartion test that tests functionality of entire system with "client" interface
