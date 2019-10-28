@@ -56,8 +56,8 @@ The parser also saves the connectors (; && ||) so that the commands can be prope
 We also tested the functioning of fork(), execvp() and waitpid()...
 
 ## Development and Testing Roadmap
-1. Create Parser class
-   1. Create unit tests to ensure Parser class correctly parses user input
+1. Create Parser class #1
+   1. Create unit tests to ensure Parser class correctly parses user input #2
    1. Create unit test to ensure Parser correctly creates Executable objects
    1. Create unit test to ensure Executable children are created correctly
 1. Create Connector superclass 
