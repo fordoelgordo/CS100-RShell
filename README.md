@@ -54,7 +54,8 @@ The parser can be compiled with the following command:
 $ g++ -g -w -Wall -Werror parser.cpp
 ```
 The parser also saves the connectors (; && ||) so that the commands can be properly executed (e.g. all commands followed by ; are executed, commands followed by && are executed, with the command following the && executed if and only if the first command succeeded, and commands followed by || are always executed with the command followed by || executed if and only if the first command failed).  
-We also tested the functioning of fork(), execvp() and waitpid()...
+  
+We also tested how the fork(), waitpid() and execvp() functions work, as we had never worked with those before.  We created fork.cpp, waitpid.cpp and execvp.cpp in the prototype/ directory which we ran to get a general sense of how these functions operate.  These functions can be combined together to simulate a functioning command shell similar to the existing command line interface.  The fork() function duplicates the existing process, and can be used to ensure entered commands execute without terminating the program.  The waitpid() function allows the parent process to suspend while child processes execute, which will enable the shell to continue running in the background while user-entered commands are executed.  It will return a status indicating if the passed in commands executed as intended or not.  Finally, the execvp() function is what actually executes the commands located in the $PATH variable.  The function takes a command and a character vector of arguments terminated with NULL and executes the command, provided it is a valid executable within the $PATH variable.  We created a prototype test_functions.cpp that we used to test how all 3 functions can work together to execute user-entered commands.
 
 ## Development and Testing Roadmap
 1. Create Parser class [#1](https://github.com/cs100/assignment-git_shorty_assn/issues/1)
