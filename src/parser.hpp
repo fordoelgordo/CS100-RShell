@@ -39,7 +39,7 @@ class Parser {
 		}
 	    }
 	    finalCommands.push_back(commands.at(commands.size() - 1));
-   
+	    
 	    // Create Executable objects 
 	    ExecuteGroup* executable = new ExecuteGroup();
 	    string sep = ";";
@@ -89,6 +89,22 @@ class Parser {
 		    }
 		    args.clear();
 		}
+		args.clear();		
+		cmd = (char*)finalCommands.at(finalCommands.size() - 1).c_str();
+		temp = strtok(cmd, " ");
+		while (temp != NULL) {
+		    if (temp != '\0') {
+			args.push_back(temp);
+		    }
+		    temp = strtok(NULL, " ");
+		}
+		char** arguments3 = new char*[args.size() + 1];
+		for (int i = 0; i < args.size(); ++i) {
+		    arguments3[i] = args.at(i);
+		}
+		arguments3[args.size()] = NULL;
+		ExecuteCommand* command4 = new Execute(arguments3, sep);
+		executable->add_command(command4);
 	    }
 
 	    return executable;
