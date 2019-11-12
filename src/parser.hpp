@@ -22,12 +22,14 @@ class Parser {
 	    // Parse userInput into tokens using the ;, &&, || separators
 	    for (tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter) {
 		string parsed = *iter;
-		parsed = regex_replace(parsed, regex("^ +"), ""); // Remove leading whitespace from parsed token
-		parsed = regex_replace(parsed, regex(" +$"), ""); // Remove trailing whitespace from parsed token
+		if (parsed.find("\"") == string::npos) {
+		    parsed = regex_replace(parsed, regex("^ +"), "");
+		    parsed = regex_replace(parsed, regex(" +$"), ""); // Remove trailing whitespace from parsed token
+		}
 		commands.push_back(parsed);
 	    }
 
-	    // Create a vector of entered commands, which we will built Executable objects off of
+	    // Create a vector of entered commands, which we will build Executable objects off of
 	    vector<string> finalCommands;
 	    for (unsigned int i = 0; i < commands.size() - 1; ++i) {
 		if ((commands.at(i) == "&" && commands.at(i + 1) == "&") || (commands.at(i) == "|" && commands.at(i + 1) == "|")) {
@@ -40,44 +42,34 @@ class Parser {
 	    }
 	    finalCommands.push_back(commands.at(commands.size() - 1));
 	    
+	    // Parse out comments
+	    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+		if (finalCommands.at(i).find("#") != string::npos) {
+		    finalCommands.at(i).erase(finalCommands.at(i).find("#"), finalCommands.at(i).size());
+		}
+	    }
+	    
+	    // Correctly account for " " in commands
+	    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+		if (finalCommands.at(i).find("\"") != string::npos && i < finalCommands.size() - 2) {
+		    finalCommands.at(i) = regex_replace(finalCommands.at(i), regex("^ +"), "");
+		    finalCommands.at(i) = finalCommands.at(i) + finalCommands.at(i + 1) + finalCommands.at(i + 2);
+		    finalCommands.erase(finalCommands.begin() + i + 1); // Erase portions of vector that have been combined
+		    finalCommands.erase(finalCommands.begin() + i + 1); // Erase portions of vector that have been combined
+		}
+	    }
+	
 	    // Create Executable objects 
 	    ExecuteGroup* executable = new ExecuteGroup();
 	    string sep = ";";
-	    char* cmd;
-	    vector<char*> args;
-	    char* temp;
 	    if (finalCommands.size() == 1) {
-		cmd = (char*)finalCommands.at(0).c_str();
-		temp = strtok(cmd, " "); // Split command by spaces
-		while (temp != NULL) {
-		    if (temp != '\0') {
-			args.push_back(temp);
-		    }
-		    temp = strtok(NULL, " ");
-		}
-		char** arguments = new char*[args.size() + 1];
-		for (int i = 0; i < args.size(); ++i) {
-		    arguments[i] = args.at(i);
-		}
-		arguments[args.size()] = NULL; // Ensure arguments list is NULL terminated	
+		char** arguments = create_charstar(finalCommands.at(0));
 		ExecuteCommand* command = new Execute(arguments, sep);
 		executable->add_command(command);
 	    }
 	    else {
 		for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
-		    cmd = (char*)finalCommands.at(i).c_str();
-		    temp = strtok(cmd, " ");
-		    while (temp != NULL) {
-			if (temp != '\0') {
-			    args.push_back(temp);
-			}
-			temp = strtok(NULL, " ");
-		    }
-		    char** arguments2 = new char*[args.size() + 1];
-		    for (int i = 0; i < args.size(); ++i) {
-			arguments2[i] = args.at(i);
-		    }
-		    arguments2[args.size()] = NULL;   
+		    char** arguments2 = create_charstar(finalCommands.at(i));
 		    if ((finalCommands.at(i) != "&&" && finalCommands.at(i) != "||") && (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||")) {
 			ExecuteCommand* command2 = new Execute(arguments2, finalCommands.at(i + 1));
 			executable->add_command(command2);
@@ -87,28 +79,38 @@ class Parser {
 			ExecuteCommand* command3 = new Execute(arguments2, sep);
 			executable->add_command(command3);
 		    }
-		    args.clear();
 		}
-		args.clear();		
-		cmd = (char*)finalCommands.at(finalCommands.size() - 1).c_str();
-		temp = strtok(cmd, " ");
-		while (temp != NULL) {
-		    if (temp != '\0') {
-			args.push_back(temp);
-		    }
-		    temp = strtok(NULL, " ");
-		}
-		char** arguments3 = new char*[args.size() + 1];
-		for (int i = 0; i < args.size(); ++i) {
-		    arguments3[i] = args.at(i);
-		}
-		arguments3[args.size()] = NULL;
+		char** arguments3 = create_charstar(finalCommands.at(finalCommands.size() - 1));
 		ExecuteCommand* command4 = new Execute(arguments3, sep);
 		executable->add_command(command4);
 	    }
 
 	    return executable;
-	}				
+	}
+    
+    private:
+	// Implement helper functions to main parsing function
+	char** create_charstar(string input) {
+	    char* cmd;
+	    vector<char*> args;
+	    char* temp;
+	    cmd = (char*)input.c_str();
+	    temp = strtok(cmd, " ");
+	    while (temp != NULL) {
+		if (temp != '\0') {
+		    args.push_back(temp);
+		}
+		temp = strtok(NULL, " ");
+	    }
+	    char** arguments = new char*[args.size() + 1];
+	    for (unsigned int i = 0; i < args.size(); ++i) {
+		arguments[i] = args.at(i);
+	    }
+	    arguments[args.size()] = NULL;
+
+	    return arguments;
+	}
+				
 };
 
 #endif //__Parser_HPP__
