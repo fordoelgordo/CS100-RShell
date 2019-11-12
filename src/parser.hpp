@@ -39,34 +39,56 @@ class Parser {
 		}
 	    }
 	    finalCommands.push_back(commands.at(commands.size() - 1));
-	    
+   
 	    // Create Executable objects 
 	    ExecuteGroup* executable = new ExecuteGroup();
 	    string sep = ";";
+	    char* cmd;
+	    vector<char*> args;
+	    char* temp;
 	    if (finalCommands.size() == 1) {
-		const char* cmd = finalCommands.at(0).c_str();
-		ExecuteCommand* command = new Execute(cmd, sep);
+		cmd = (char*)finalCommands.at(0).c_str();
+		temp = strtok(cmd, " "); // Split command by spaces
+		while (temp != NULL) {
+		    if (temp != '\0') {
+			args.push_back(temp);
+		    }
+		    temp = strtok(NULL, " ");
+		}
+		char** arguments = new char*[args.size() + 1];
+		for (int i = 0; i < args.size(); ++i) {
+		    arguments[i] = args.at(i);
+		}
+		arguments[args.size()] = NULL; // Ensure arguments list is NULL terminated	
+		ExecuteCommand* command = new Execute(arguments, sep);
 		executable->add_command(command);
 	    }
 	    else {
 		for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
+		    cmd = (char*)finalCommands.at(i).c_str();
+		    temp = strtok(cmd, " ");
+		    while (temp != NULL) {
+			if (temp != '\0') {
+			    args.push_back(temp);
+			}
+			temp = strtok(NULL, " ");
+		    }
+		    char** arguments2 = new char*[args.size() + 1];
+		    for (int i = 0; i < args.size(); ++i) {
+			arguments2[i] = args.at(i);
+		    }
+		    arguments2[args.size()] = NULL;   
 		    if ((finalCommands.at(i) != "&&" && finalCommands.at(i) != "||") && (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||")) {
-			const char* cmd2 = finalCommands.at(i).c_str();
-			string sep2 = finalCommands.at(i + 1);
-			ExecuteCommand* command2 = new Execute(cmd2, sep2);
+			ExecuteCommand* command2 = new Execute(arguments2, finalCommands.at(i + 1));
 			executable->add_command(command2);
 			++i;
 		    }
 		    else {
-			const char* cmd3 = finalCommands.at(i).c_str();
-			ExecuteCommand* command3 = new Execute(cmd3, sep);
+			ExecuteCommand* command3 = new Execute(arguments2, sep);
 			executable->add_command(command3);
 		    }
+		    args.clear();
 		}
-    
-		const char* cmd4 = finalCommands.at(finalCommands.size() - 1).c_str();
-		ExecuteCommand* command4 = new Execute(cmd4, sep);
-		executable->add_command(command4);
 	    }
 
 	    return executable;

@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <unistd.h> // To use the execvp() function
+#include <sys/wait.h> // To execute waitpid() command which allows the parent process to wait for the child
 
 class ExecuteCommand {
     public:

@@ -12,7 +12,9 @@ class ExecuteGroup : public ExecuteCommand {
     public:
 	ExecuteGroup() : ExecuteCommand() {};
 	virtual void execute() {
-	    // Do nothing for now
+	    for (int i = 0; i < commands.size(); ++i) {
+		return this->commands.at(i)->execute();
+	    }
 	}
 	virtual void print_command() {
 	    for (unsigned int i = 0; i < this->commands.size(); ++i) {
