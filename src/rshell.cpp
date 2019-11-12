@@ -18,6 +18,7 @@ int main() {
 	getline(cin, userInput);		
 	Parser* parsed = new Parser();
 	ExecuteGroup* executable = parsed->parse(userInput);
+	//executable->print_command();
 	executable->execute();    
     }
 

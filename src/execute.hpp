@@ -26,23 +26,28 @@ class Execute : public ExecuteCommand {
 
 	    if (childPid == 0) {
 		// In the child process, execute commands using execvp()
-		string cmd = *this->command;
-		if (cmd == "exit") { // If an exit command is entered, exit the child process
-		    _Exit(0); // Exit entire program if exit command is entered
+		if(execvp(*this->command, this->command) < 0) {
+		    perror("execvp() failed");
+		    exit(1);
 		}
-		else {
-		    if(execvp(this->command[0], this->command) < 0) {
-			perror("execvp() failed");
-			exit(1);
-		    }
-		}
-	
 	    }
 	    else if (childPid > 0) {
 		// In the parent process, utilize the waidpid() command to wait for the child
 		// process to finish executing
-		pid = waitpid(childPid, &status, WNOHANG); // Return immediately if no child exited
-	    	this->executeSuccess = WIFEXITED(status);	
+		pid = waitpid(childPid, &status, 0); // Get status of child process
+		if (pid == -1) {
+		    perror("Error in child processing");
+		    exit(1); // Exit with error status 1
+		}
+		if (status > 0) {
+		    this->executeSuccess = false;
+		}
+		else if (status == 0) {
+		    this->executeSuccess = true; // waitpid() returns 0 when child process returned 0
+		}
+		else if (status == 1) {
+		    this->executeSuccess = false;
+		}     			
 	    }
 	    else {
 		// If this condition branch is reached the fork() process failed
@@ -51,11 +56,23 @@ class Execute : public ExecuteCommand {
 	    }
 	}
 	virtual void print_command() {
-	    cout << *command << separator << endl;
+	    int i = 0;
+	    while (this->command[i] != '\0') {
+		cout << this->command[i] << " ";
+		++i;
+	    }
+	    cout << this->separator;
+	    cout << endl;
 	}
-	string get_command() {
+	virtual string get_command() {
 	    string cmd = *this->command;
 	    return cmd;
+	}
+	virtual string get_separator() {
+	    return this->separator;
+	}
+	virtual bool get_success() {
+	    return this->executeSuccess;
 	}
 };
 
