@@ -13,7 +13,12 @@ class ExecuteGroup : public ExecuteCommand {
 	ExecuteGroup() : ExecuteCommand() {};
 	virtual void execute() {
 	    for (int i = 0; i < commands.size(); ++i) {
-		return this->commands.at(i)->execute();
+		if (this->commands.at(i)->get_command() == "exit") {
+		    exit(0);
+		}
+		else {
+		    this->commands.at(i)->execute();
+		}
 	    }
 	}
 	virtual void print_command() {
@@ -23,6 +28,9 @@ class ExecuteGroup : public ExecuteCommand {
 	}
 	void add_command(ExecuteCommand* command) {
 	    this->commands.push_back(command);
+	}
+	virtual string get_command() {
+	    // Do nothing in this class' implementation
 	}
 	
 };

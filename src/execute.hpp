@@ -52,7 +52,11 @@ class Execute : public ExecuteCommand {
 	}
 	virtual void print_command() {
 	    cout << *command << separator << endl;
-	} 
+	}
+	string get_command() {
+	    string cmd = *this->command;
+	    return cmd;
+	}
 };
 
 #endif //__Execute_HPP__
