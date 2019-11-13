@@ -15,6 +15,7 @@ class ExecuteCommand {
 	virtual void execute() = 0;
 	virtual void print_command() = 0;
 	virtual string get_command() = 0;
+	virtual string get_command_full() = 0;
 	virtual string get_separator() = 0;
 	virtual bool get_success() = 0;
 };
