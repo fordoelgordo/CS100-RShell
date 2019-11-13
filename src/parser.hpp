@@ -7,6 +7,7 @@
 #include <string>
 #include <regex>
 #include <boost/tokenizer.hpp>
+#include <algorithm>
 
 using namespace std;
 
@@ -70,37 +71,52 @@ class Parser {
 	    // Parse out " " since we've handled correctly so that it doesn't print to console
 	    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
 		finalCommands.at(i).erase(remove(finalCommands.at(i).begin(), finalCommands.at(i).end(), '\"'), finalCommands.at(i).end());	
-	    }  
+	    }   
+ 
+	    // Remove all instance of a single "&" and "|"
+	    finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
+	    finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
 	    
 	    // Create Executable objects
 	    ExecuteGroup* executable = new ExecuteGroup();
-
-	    if (finalCommands.size() == 1) {
+	    string sep = ";";
+	    if (finalCommands.size() <= 2) {
 		char** arguments = create_charstar(finalCommands.at(0));
-		ExecuteCommand* command = new Execute(arguments, ";");
+		ExecuteCommand* command = new Execute(arguments, sep);
 		executable->add_command(command);
 	    }
 	    else {
 		for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
-		    cout << "Creating execute with: " << finalCommands.at(i) << endl;
-		    char** arguments2 = create_charstar(finalCommands.at(i));
-		    if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "&" && finalCommands.at(i) != "||" && finalCommands.at(i) != "|" && finalCommands.at(i) != ";") {
+		    if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "||" && finalCommands.at(i) != ";") {
 			if (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||" || finalCommands.at(i + 1) == ";") {
-			    ExecuteCommand* command2 = new Execute(arguments2, finalCommands.at(i + 1));
-			    executable->add_command(command2);
+			    ExecuteCommand* command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
+			    executable->add_command(command);
+			    /*			    
+			    char* cmd;
+			    vector<char*> args;
+			    char* temp;
+			    cmd = (char*)finalCommands.at(i).c_str();
+			    temp = strtok(cmd, " ");
+			    while (temp != NULL) {
+				if (temp != '\0') {
+				    args.push_back(temp);
+				}
+				temp = strtok(NULL, " ");
+			    }
+			    char** arguments = new char*[args.size() + 1];
+			    for (unsigned int i = 0; i < args.size(); ++i) {
+				arguments[i] = args.at(i);
+			    }
+			    arguments[args.size()] = NULL;    
+			    */
 			    ++i;
-			}
-			else {
-			    ExecuteCommand* command3 = new Execute(arguments2, ";");
-			    executable->add_command(command3);
 			}
 		    }
 		}
 		int pos = finalCommands.size() - 1;
-		if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";" && finalCommands.at(pos) != "&" && finalCommands.at(pos) != "|") {
-		    char** arguments3 = create_charstar(finalCommands.at(pos));
-		    ExecuteCommand* command4 = new Execute(arguments3, ";");
-		    executable->add_command(command4);
+		if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";") {
+		    ExecuteCommand* command2 = new Execute(create_charstar(finalCommands.at(pos)), sep);
+		    executable->add_command(command2);
 		}
 	    }
 	    
@@ -109,7 +125,7 @@ class Parser {
     
     private:
 	// Implement helper functions to main parsing function
-	char** create_charstar(string input) {
+	char** create_charstar(const string & input) {
 	    char* cmd;
 	    vector<char*> args;
 	    char* temp;
@@ -126,8 +142,17 @@ class Parser {
 		arguments[i] = args.at(i);
 	    }
 	    arguments[args.size()] = NULL;
-
+	    
 	    return arguments;
+	}
+	
+	void print_charstar(char** input) {
+	    int i = 0;
+	    while (input[i] != '\0') {
+		cout << input[i] << " ";
+		++i;
+	    }
+	    cout << endl;
 	}
 				
 };
