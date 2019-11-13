@@ -15,7 +15,7 @@ class Parser {
 	Parser() {};
 	ExecuteGroup* parse(string userInput) {
 	    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-	    boost::char_separator<char> delim(";", "&&||");
+	    boost::char_separator<char> delim("", "&|;"); // Parse on & | and ; but keep these tokens in the output
 	    tokenizer tokens(userInput, delim);
 	    vector<string> commands;
 	   
@@ -28,19 +28,37 @@ class Parser {
 		}
 		commands.push_back(parsed);
 	    }
-
-	    // Create a vector of entered commands, which we will build Executable objects off of
+	    
+	    // Correctly account for connectors between " "
 	    vector<string> finalCommands;
 	    for (unsigned int i = 0; i < commands.size() - 1; ++i) {
-		if ((commands.at(i) == "&" && commands.at(i + 1) == "&") || (commands.at(i) == "|" && commands.at(i + 1) == "|")) {
-		    finalCommands.push_back(commands.at(i) + commands.at(i + 1));
+		string join = commands.at(i);
+		if (commands.at(i).find("\"") != string::npos) {
+		    while (commands.at(i + 1).find("\"") == string::npos) {
+			join += commands.at(i + 1);
+			++i;
+		    }
+		    ++i;
+		    join += commands.at(i);
+		}
+		finalCommands.push_back(join);
+	    }
+	    if (commands.at(commands.size() - 1).find("\"") == string::npos) {
+		finalCommands.push_back(commands.at(commands.size() - 1));
+	    }
+	    
+	    // If there are connectors at the beginning of the command sequence, remove them
+	    while (finalCommands.at(0) == "&" || finalCommands.at(0) == "|" || finalCommands.at(0) == ";") {
+		finalCommands.erase(finalCommands.begin() + 0);
+	    }
+
+	    // Link separated connectors together
+	    for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
+		if ((finalCommands.at(i) == "&" && finalCommands.at(i + 1) == "&") || (finalCommands.at(i) == "|" && finalCommands.at(i + 1) == "|") || (finalCommands.at(i) == ";" && finalCommands.at(i + 1) == ";")) {
+		    finalCommands.at(i) += finalCommands.at(i + 1);
 		    ++i;
 		}
-		else {
-		    finalCommands.push_back(commands.at(i));
-		}
 	    }
-	    finalCommands.push_back(commands.at(commands.size() - 1));
 	    
 	    // Parse out comments
 	    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
@@ -48,43 +66,44 @@ class Parser {
 		    finalCommands.at(i).erase(finalCommands.at(i).find("#"), finalCommands.at(i).size());
 		}
 	    }
-	    
-	    // Correctly account for " " in commands
+
+	    // Parse out " " since we've handled correctly so that it doesn't print to console
 	    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
-		if (finalCommands.at(i).find("\"") != string::npos && i < finalCommands.size() - 2) {
-		    finalCommands.at(i) = regex_replace(finalCommands.at(i), regex("^ +"), "");
-		    finalCommands.at(i) = finalCommands.at(i) + finalCommands.at(i + 1) + finalCommands.at(i + 2);
-		    finalCommands.erase(finalCommands.begin() + i + 1); // Erase portions of vector that have been combined
-		    finalCommands.erase(finalCommands.begin() + i + 1); // Erase portions of vector that have been combined
-		}
-	    }
-	
-	    // Create Executable objects 
+		finalCommands.at(i).erase(remove(finalCommands.at(i).begin(), finalCommands.at(i).end(), '\"'), finalCommands.at(i).end());	
+	    }  
+	    
+	    // Create Executable objects
 	    ExecuteGroup* executable = new ExecuteGroup();
-	    string sep = ";";
+
 	    if (finalCommands.size() == 1) {
 		char** arguments = create_charstar(finalCommands.at(0));
-		ExecuteCommand* command = new Execute(arguments, sep);
+		ExecuteCommand* command = new Execute(arguments, ";");
 		executable->add_command(command);
 	    }
 	    else {
 		for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
+		    cout << "Creating execute with: " << finalCommands.at(i) << endl;
 		    char** arguments2 = create_charstar(finalCommands.at(i));
-		    if ((finalCommands.at(i) != "&&" && finalCommands.at(i) != "||") && (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||")) {
-			ExecuteCommand* command2 = new Execute(arguments2, finalCommands.at(i + 1));
-			executable->add_command(command2);
-			++i;
-		    }
-		    else {
-			ExecuteCommand* command3 = new Execute(arguments2, sep);
-			executable->add_command(command3);
+		    if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "&" && finalCommands.at(i) != "||" && finalCommands.at(i) != "|" && finalCommands.at(i) != ";") {
+			if (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||" || finalCommands.at(i + 1) == ";") {
+			    ExecuteCommand* command2 = new Execute(arguments2, finalCommands.at(i + 1));
+			    executable->add_command(command2);
+			    ++i;
+			}
+			else {
+			    ExecuteCommand* command3 = new Execute(arguments2, ";");
+			    executable->add_command(command3);
+			}
 		    }
 		}
-		char** arguments3 = create_charstar(finalCommands.at(finalCommands.size() - 1));
-		ExecuteCommand* command4 = new Execute(arguments3, sep);
-		executable->add_command(command4);
+		int pos = finalCommands.size() - 1;
+		if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";" && finalCommands.at(pos) != "&" && finalCommands.at(pos) != "|") {
+		    char** arguments3 = create_charstar(finalCommands.at(pos));
+		    ExecuteCommand* command4 = new Execute(arguments3, ";");
+		    executable->add_command(command4);
+		}
 	    }
-
+	    
 	    return executable;
 	}
     
