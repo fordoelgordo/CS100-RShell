@@ -70,11 +70,18 @@ ExecuteGroup* Parser:: parse(string userInput) {
     }
     
     // Parse out comments
-    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+    int index = -1;
+    bool found = false;
+    for (unsigned int i = 0; i < finalCommands.size() && !found; ++i) {
 	if (finalCommands.at(i).find("#") != string::npos) {
 	    finalCommands.at(i).erase(finalCommands.at(i).find("#"), finalCommands.at(i).size());
+	    found  = true;
+	    index = i;
 	}
     }
+    if (index != -1) {
+	finalCommands.erase(finalCommands.begin() + index + 1, finalCommands.end());
+    }    
 
     // Parse out " " since we've handled correctly so that it doesn't print to console
     for (unsigned int i = 0; i < finalCommands.size(); ++i) {
