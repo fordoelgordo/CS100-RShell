@@ -1,7 +1,10 @@
 #include "gtest/gtest.h"
 
+#include "../src/executecommand.hpp"
 #include "../src/parser.hpp"
+#include "../src/testexecute.hpp"
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -61,7 +64,72 @@ TEST(ExecuteTest, BadCommand) {
     execute->execute();
     EXPECT_FALSE(execute->get_success());
 }
-   
+
+// Unit test to test the Test class implementation
+TEST(TestExecuteTest, SimpleCommand) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("-e");
+    command.push_back("src/");
+    ExecuteCommand* executable = new TestExecute(command, ";");
+    executable->execute();
+    EXPECT_TRUE(executable->get_success());
+}
+TEST(TestExecuteTest, SimpleFail) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("nonexistant/file/path");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_FALSE(test->get_success());
+}
+TEST(TestExecuteTest, SimpleBracket) {
+    vector<string> command;
+    command.push_back("[");
+    command.push_back("-e");
+    command.push_back("src/");
+    command.push_back("]");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_TRUE(test->get_success());
+}
+TEST(TestExecuteTest, fflag) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("-f");
+    command.push_back("src/testexecute.hpp");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_TRUE(test->get_success());
+}
+TEST(TestExecuteTest, dflag) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("-d");
+    command.push_back("src/");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_TRUE(test->get_success());
+}
+TEST(TestExecuteTest, fflagFail) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("-f");
+    command.push_back("~/assignment-assign_jeff_ford/prototype/");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_FALSE(test->get_success());
+}
+TEST(TestExecuteTest, dflagFail) {
+    vector<string> command;
+    command.push_back("test");
+    command.push_back("-d");
+    command.push_back("~/assignment-assign_jeff_ford/src/testexecute.hpp");
+    ExecuteCommand* test = new TestExecute(command, ";");
+    test->execute();
+    EXPECT_FALSE(test->get_success());
+}
+
 // main() function to execute tests 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
