@@ -22,29 +22,32 @@ ExecuteGroup* Parser:: parse(string userInput) {
 	*/
 	commands.push_back(parsed);
     }
-    
+        
     // Correctly account for connectors between " "
     vector<string> finalCommands;
+    int j;
     if (commands.size() == 1) {
 	finalCommands.push_back(commands.at(0));
     }
     else {
 	for (unsigned int i = 0; i < commands.size() - 1; ++i) {
 	    string join = commands.at(i);
-	    if (commands.at(i).find("\"") != string::npos && commands.at(i).substr(commands.at(i).find("\"") + 1, commands.at(i).size()).find("\"") == string::npos) {
-		while (commands.at(i + 1).find("\"") == string::npos) {
+	    if (commands.at(i).find("\"") != string::npos && commands.at(i).at(commands.at(i).size() - 2) != '"') {
+		while (commands.at(i + 1).find("\"") == string::npos && i < commands.size()) {
 		    join += commands.at(i + 1);
 		    ++i;
 		}
 		++i;
-		if (commands.at(i).find("\"") != string::npos) {
-		    join += commands.at(i);
-		}
+		join += commands.at(i);
+		finalCommands.push_back(join);
 	    }
-	    finalCommands.push_back(join);
-	}	
+	    else {
+		finalCommands.push_back(join);
+	    }
+	    j = i;
+	}
     }
-    if (commands.at(commands.size() - 1).find("\"") == string::npos) {
+    if (j + 1 < commands.size()) {
 	finalCommands.push_back(commands.at(commands.size() - 1));
     }
     
@@ -91,47 +94,47 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Remove all instance of a single "&" and "|"
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
-    
+ 
     // Create Executable objects
     ExecuteGroup* executable = new ExecuteGroup();
     string sep = ";";
     if (finalCommands.size() <= 2) {
-	char** arguments = create_charstar(finalCommands.at(0));
-	ExecuteCommand* command = new Execute(arguments, sep);
-	executable->add_command(command);
+	if (finalCommands.at(0).substr(0,4) == "test" || finalCommands.at(0).substr(0,1) == "[") { // Create TestExecute object if user entered a "test" command
+	    ExecuteCommand* test = new TestExecute(create_stringvec(finalCommands.at(0)), sep);
+	    executable->add_command(test);
+	}
+	else {
+	    char** arguments = create_charstar(finalCommands.at(0));
+	    ExecuteCommand* command = new Execute(arguments, sep);
+	    executable->add_command(command);
+	}
     }
     else {
 	for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
 	    if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "||" && finalCommands.at(i) != ";") {
 		if (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||" || finalCommands.at(i + 1) == ";") {
-		    ExecuteCommand* command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
-		    executable->add_command(command);
-		    /*			    
-		    char* cmd;
-		    vector<char*> args;
-		    char* temp;
-		    cmd = (char*)finalCommands.at(i).c_str();
-		    temp = strtok(cmd, " ");
-		    while (temp != NULL) {
-			if (temp != '\0') {
-			    args.push_back(temp);
-			}
-			temp = strtok(NULL, " ");
+		    if (finalCommands.at(i).substr(0,4) == "test" || finalCommands.at(i).substr(0,1) == "[") {
+			ExecuteCommand* test = new TestExecute(create_stringvec(finalCommands.at(i)), finalCommands.at(i + 1));
+			executable->add_command(test);
 		    }
-		    char** arguments = new char*[args.size() + 1];
-		    for (unsigned int i = 0; i < args.size(); ++i) {
-			arguments[i] = args.at(i);
+		    else {
+			ExecuteCommand* command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
+			executable->add_command(command);
 		    }
-		    arguments[args.size()] = NULL;    
-		    */
 		    ++i;
 		}
 	    }
 	}
 	int pos = finalCommands.size() - 1;
 	if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";") {
-	    ExecuteCommand* command2 = new Execute(create_charstar(finalCommands.at(pos)), sep);
-	    executable->add_command(command2);
+	    if (finalCommands.at(pos).substr(0,4) == "test" || finalCommands.at(pos).substr(0,1) == "[") {
+		ExecuteCommand* test2 = new TestExecute(create_stringvec(finalCommands.at(pos)), sep);
+		executable->add_command(test2);
+	    }
+	    else {
+		ExecuteCommand* command2 = new Execute(create_charstar(finalCommands.at(pos)), sep);
+		executable->add_command(command2);
+	    }
 	}
     }
     
@@ -160,7 +163,19 @@ char** Parser::create_charstar(const string & input) {
     
     return arguments;
 }
+vector<string> Parser::create_stringvec(const string & input) {
+    char* cmd;
+    char* token;
+    vector<string> arguments;
+    cmd = (char*)input.c_str();
+    token = strtok(cmd, " ");
+    while (token != NULL) {
+	arguments.push_back(std::string(token));
+	token = strtok(NULL, " ");
+    }
 
+    return arguments;
+}
 void Parser::print_charstar(char** input) {
     int i = 0;
     while (input[i] != '\0') {
@@ -168,4 +183,9 @@ void Parser::print_charstar(char** input) {
 	++i;
     }
     cout << endl;
+}
+void Parser::print_vector(const vector<string> & vec) {
+    for (unsigned int i = 0; i < vec.size(); ++i) {
+	cout << vec.at(i) << endl;
+    }
 }
