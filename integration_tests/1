@@ -1,0 +1,12 @@
+#!/bin/bash
+
+../rshell < "(echo hello world)"
+../rshell < "(echo A && echo B) || (echo C && echo D)"
+../rshell < "((echo A && echo B) && echo C)"
+../rshell < "echo A || (echo B && echo C)"
+../rshell < "echo A && (echo B || echo C)"
+../rshell < "(echo hello && echo world) && (echo !! || echo test)"
+../rshell < "(ls -a && (echo hello world && echo file))"
+../rshell < "((echo not valid && echo good bye)"
+
+

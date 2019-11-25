@@ -91,53 +91,106 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Remove all instance of a single "&" and "|"
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
-    
+ 
     // Create Executable objects
     ExecuteGroup* executable = new ExecuteGroup();
     string sep = ";";
-    if (finalCommands.size() <= 2) {
-	char** arguments = create_charstar(finalCommands.at(0));
-	ExecuteCommand* command = new Execute(arguments, sep);
-	executable->add_command(command);
-    }
-    else {
-	for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
-	    if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "||" && finalCommands.at(i) != ";") {
-		if (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||" || finalCommands.at(i + 1) == ";") {
-		    ExecuteCommand* command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
-		    executable->add_command(command);
-		    /*			    
-		    char* cmd;
-		    vector<char*> args;
-		    char* temp;
-		    cmd = (char*)finalCommands.at(i).c_str();
-		    temp = strtok(cmd, " ");
-		    while (temp != NULL) {
-			if (temp != '\0') {
-			    args.push_back(temp);
-			}
-			temp = strtok(NULL, " ");
-		    }
-		    char** arguments = new char*[args.size() + 1];
-		    for (unsigned int i = 0; i < args.size(); ++i) {
-			arguments[i] = args.at(i);
-		    }
-		    arguments[args.size()] = NULL;    
-		    */
-		    ++i;
+    if(check_valid_par(finalCommands)) {
+    	if (finalCommands.size() <= 2) {
+		if(finalCommands.at(0).substr(0, 1) == "(") {
+			parse_par(finalCommands);//Parse parenthesis from finalCommands, and create new Execute object
+			ExecuteCommand *command = new Execute(create_charstar(finalCommands.at(0)), sep);
+			executable->add_command(command);
 		}
-	    }
+		else {
+			char** arguments = create_charstar(finalCommands.at(0));
+			ExecuteCommand* command = new Execute(arguments, sep);
+			executable->add_command(command);
+		}	
+   	 }
+
+    	else {
+		for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
+	    	if (finalCommands.at(i) != "&&" && finalCommands.at(i) != "||" && finalCommands.at(i) != ";") {
+			if (finalCommands.at(i + 1) == "&&" || finalCommands.at(i + 1) == "||" || finalCommands.at(i + 1) == ";") {
+				parse_par(finalCommands);
+				ExecuteCommand *command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
+				executable->add_command(command);
+			}
+		
+			else {	 
+				parse_par(finalCommands);	
+				ExecuteCommand *command = new Execute(create_charstar(finalCommands.at(i)), finalCommands.at(i + 1));
+				executable->add_command(command);
+			}
+				++i;
+			}
+		}
+
+		int pos = finalCommands.size() - 1;
+		if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";") {
+			if(finalCommands.at(pos).substr(0,1) == "(") {
+				ExecuteCommand *command = new Execute(create_charstar(finalCommands.at(pos)), sep);
+				executable->add_command(command);
+			}
+			else {
+				ExecuteCommand *command = new Execute(create_charstar(finalCommands.at(pos)), sep);
+				executable->add_command(command);
+			}
+			}
+		}
+    		return executable;
 	}
-	int pos = finalCommands.size() - 1;
-	if (finalCommands.at(pos) != "&&" && finalCommands.at(pos) != "||" && finalCommands.at(pos) != ";") {
-	    ExecuteCommand* command2 = new Execute(create_charstar(finalCommands.at(pos)), sep);
-	    executable->add_command(command2);
+	
+	//If inbalance parenthesis, close the program
+	else {
+		cout << "Invalid Parenthesis!" << endl;
+		cout << "Exiting..." << endl;
+		exit(1);
 	}
-    }
-    
-    return executable;
 }
 
+//Checks if input is valid by checking if input have proper left and right parenthesis
+bool Parser::check_valid_par(vector<string> &input) {
+
+	int left_par = 0;
+	int right_par = 0;
+
+	for(unsigned int i = 0; i < input.size(); ++i) {
+		for(unsigned int j = 0; j < input.at(i).size(); ++j) {
+			if(input.at(i).at(j) == '(') {
+				++left_par;
+			}
+			if(input.at(i).at(j) == ')') {
+				++right_par;
+			}
+		}
+	}
+	if(left_par != right_par) {
+		return false;
+	}
+	return true;
+}
+
+//Parse parenthesis from FinalCommand
+void Parser::parse_par(vector<string> &final_input) {
+
+	for(unsigned int i = 0 ; i < final_input.size(); ++i) {
+		for(unsigned int j = 0; j < final_input.at(i).size(); ++j) {
+  	               if(final_input.at(i).at(j) == '(' || final_input.at(i).at(j) == ')') {
+				if(final_input.at(i).at(j) == '(') {
+                   	    		final_input.at(i).erase(j, 1);
+				}
+			}
+			//Second loop to fix double parenthesis bug. Ex. ((echo hello world) ==> (echo hello world
+          		for(unsigned int j = 0; j < final_input.at(i).size(); ++j) {
+                  		if(final_input.at(i).at(j) == '(' || final_input.at(i).at(j) == ')') {
+                           		  final_input.at(i).erase(j, 1);
+                        	}
+       	                }
+		}          	
+	}
+}
 
 // Implement helper functions to main parsing function
 char** Parser::create_charstar(const string & input) {
@@ -168,4 +221,10 @@ void Parser::print_charstar(char** input) {
 	++i;
     }
     cout << endl;
+}
+
+void Parser::print_vector(const vector<string> & vec) {
+    for (unsigned int i = 0; i < vec.size(); ++i) {
+	cout << vec.at(i) << endl;
+    }
 }

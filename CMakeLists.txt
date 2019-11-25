@@ -11,6 +11,7 @@ ADD_EXECUTABLE(test
     ${PROJECT_BINARY_DIR}/parser.cpp
     ${PROJECT_BINARY_DIR}/execute.cpp
     ${PROJECT_BINARY_DIR}/executegroup.cpp
+
 )
 
 ADD_EXECUTABLE(rshell
@@ -18,6 +19,7 @@ ADD_EXECUTABLE(rshell
     ${PROJECT_BINARY_DIR}/parser.cpp
     ${PROJECT_BINARY_DIR}/execute.cpp
     ${PROJECT_BINARY_DIR}/executegroup.cpp
+
 )
 
 TARGET_LINK_LIBRARIES(test gtest)
