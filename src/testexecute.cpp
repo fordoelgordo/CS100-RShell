@@ -88,7 +88,9 @@ void TestExecute::execute() {
 		this->executeSuccess = false;
 	    }
 	}
-	this->executeSuccess = true; // If none of the nested branches are taken, but the main else branch is taken then return true
+	else {
+	    this->executeSuccess = true; // If none of the nested branches are taken, but the main else branch is taken then return true
+	}
     }
 }
 
