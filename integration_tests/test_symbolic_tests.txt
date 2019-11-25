@@ -1,0 +1,8 @@
+[ -e src/ ]
+[ -d src/ ]
+[ -f src/parser.cpp ]
+[ -f src/ ]
+[ -f src/ ] || echo "This should execute"
+[ -f CMakeList.txt ] && echo "This should also execute"
+[ -e src/ ] || echo "This shouldn't execute" && echo "but this should"
+exit

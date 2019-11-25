@@ -1,0 +1,9 @@
+test -e src/
+test -f src/parser.cpp
+test -f src/parser.cpp && echo "file exists"
+test -d src/ && echo "directory exists"
+test -f src/ && echo "correct eval of false statement"
+test src/
+test -f src/ || echo "Correct eval of or connector"
+test -d src/ || echo "This shouldn't output" && echo "Eval correct"
+exit

@@ -21,8 +21,9 @@ void ExecuteGroup::execute() {
 		this->commands.at(i)->execute();
 	    }
 	}
-	else if (this->commands.at(i - 1)->get_separator() == "&&") { // If a command is followed by && then the command after it is executed only if the first one succeeds
-	    if (this->commands.at(i - 1)->get_success()) {
+	else if (this->commands.at(i - 1)->get_separator() == "&&") { // Implement logic for commands following a && connector
+	    if (i - 2 >= 0 && this->commands.at(i - 2)->get_separator() == "||") {
+		// Always execute an && branch when the prior branch was an or branch
 		if (this->commands.at(i)->get_command() == "exit") {
 		    exit(0);
 		}
@@ -30,11 +31,16 @@ void ExecuteGroup::execute() {
 		    this->commands.at(i)->execute();
 		}
 	    }
-	    else {
-		++i; // skip current command in chain and go to next one
+	    else if (this->commands.at(i - 1)->get_success()) {
+		if (this->commands.at(i)->get_command() == "exit") {
+		    exit(0);
+		}
+		else {
+		    this->commands.at(i)->execute();
+		}
 	    }
 	}
-	else if (this->commands.at(i - 1)->get_separator() == "||") { // If a command is followed by || then the command after it is executed only if the first one failed
+	else if (this->commands.at(i - 1)->get_separator() == "||") { // Implement logic for commands following a || connector
 	    if (!this->commands.at(i - 1)->get_success()) {
 		if (this->commands.at(i)->get_command() == "exit") {
 		    exit(0);
@@ -42,9 +48,6 @@ void ExecuteGroup::execute() {
 		else {
 		    this->commands.at(i)->execute();
 		}
-	    }
-	    else {
-		++i; // Skip the current command in the chain and go to the next one
 	    }
 	}
 	else { // If this branch of the conditional is reached, then the command contains an invalid separator
