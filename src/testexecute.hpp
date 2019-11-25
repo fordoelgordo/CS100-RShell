@@ -2,6 +2,9 @@
 #define __TestExecute_HPP__
 
 #include "executecommand.hpp"
+#include <algorithm>
+#include <regex>
+#include <cctype> // To use isspace command
 
 using namespace std;
 

@@ -25,6 +25,11 @@ void TestExecute::execute() {
 	    this->command.pop_back();
 	}
     }
+    for (unsigned int i = 0; i < this->command.size(); ++i) {
+	if (this->command.at(i).find("]") != string::npos) {    
+	    this->command.at(i) = regex_replace(this->command.at(i), regex(" +$"), "");
+	}
+    }
     
     // The passed command should be a vector of strings starting with "test" or "[", so check for
     // flags and the path to search for from indices 1 - size() - 1
@@ -38,7 +43,7 @@ void TestExecute::execute() {
 	else if (this->command.at(i) == "-d") {
 	    dflag = true;
 	}
-	else {
+	else if (this->command.at(i) != "") {
 	    path = this->command.at(i);
 	}
     }
@@ -51,7 +56,7 @@ void TestExecute::execute() {
     // Convert the path argument to char* as this is the argument type that stat() takes
     char argument[path.size() + 1];
     strcpy(argument, path.c_str());
-
+    
     pathStatus = stat(argument, &buf);    
     // Check the return value of stat() based on the flags entered by the user
     if (pathStatus == -1) { // Directory is not found

@@ -49,8 +49,8 @@ ExecuteGroup* Parser:: parse(string userInput) {
     }
     if (j + 1 < commands.size()) {
 	finalCommands.push_back(commands.at(commands.size() - 1));
-    }
-    
+    } 
+       
     // Remove leading and trailing white space from commands that are not between " "
     for (unsigned int i = 0; i < finalCommands.size(); ++i) {
 	if (finalCommands.at(i).find("\"") == string::npos) {
@@ -58,12 +58,12 @@ ExecuteGroup* Parser:: parse(string userInput) {
 	    finalCommands.at(i) = regex_replace(finalCommands.at(i), regex(" +$"), "");
 	}
     }
-
+    
     // If there are connectors at the beginning of the command sequence, remove them
     while (finalCommands.at(0) == "&" || finalCommands.at(0) == "|" || finalCommands.at(0) == ";") {
 	finalCommands.erase(finalCommands.begin() + 0);
     }
-
+   
     // Link separated connectors together
     for (unsigned int i = 0; i < finalCommands.size() - 1; ++i) {
 	if ((finalCommands.at(i) == "&" && finalCommands.at(i + 1) == "&") || (finalCommands.at(i) == "|" && finalCommands.at(i + 1) == "|") || (finalCommands.at(i) == ";" && finalCommands.at(i + 1) == ";")) {
@@ -94,7 +94,7 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Remove all instance of a single "&" and "|"
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
- 
+    
     // Create Executable objects
     ExecuteGroup* executable = new ExecuteGroup();
     string sep = ";";
@@ -137,7 +137,7 @@ ExecuteGroup* Parser:: parse(string userInput) {
 	    }
 	}
     }
-    
+       
     return executable;
 }
 
@@ -173,8 +173,28 @@ vector<string> Parser::create_stringvec(const string & input) {
 	arguments.push_back(std::string(token));
 	token = strtok(NULL, " ");
     }
+   
+    vector<string> v;
+    if (arguments.at(0) == "test") {
+	v = arguments;
+    }
+    else {
+	for (unsigned int i = 0; i < arguments.size(); ++i) {
+	    if (arguments.at(i).find("[") != string::npos) {
+		v.push_back("[");
+		v.push_back(arguments.at(i).substr(arguments.at(i).find("[") + 1,arguments.at(i).size()));
+	    }
+	    else if (arguments.at(i).find("]") != string::npos) {
+		v.push_back(arguments.at(i).substr(0, arguments.at(i).size() - 1));
+	    }
+	    else {
+		v.push_back(arguments.at(i));
+	    }
+	}
+	v.push_back("]");
+    }
 
-    return arguments;
+    return v;
 }
 void Parser::print_charstar(char** input) {
     int i = 0;
