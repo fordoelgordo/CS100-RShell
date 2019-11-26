@@ -10,7 +10,7 @@ TestExecute::TestExecute(vector<string> enteredCommand, string sep) {
 }
 
 // Test class execute() function
-void TestExecute::execute() {
+bool TestExecute::execute() {
     // Implement the test command logic
     int pathStatus; // stat() function returns 0 if successful, e.g. path exists, otherwise returns -1 
     struct stat buf; // information about the path status is stored in this variable
@@ -61,35 +61,35 @@ void TestExecute::execute() {
     // Check the return value of stat() based on the flags entered by the user
     if (pathStatus == -1) { // Directory is not found
 	cout << "(False)" << endl;
-	this->executeSuccess = false;
+	return false;
     }
     else {
 	if (eflag) {
 	    cout << "(True)" << endl;
-	    this->executeSuccess = true;
+	    return true;
 	}
 	else if (fflag) {
 	    if(S_ISREG(buf.st_mode)) { // S_ISREG returns non-zero if path points to a regular file
 		cout << "(True)" << endl;
-		this->executeSuccess = true;
+		return true;
 	    }
 	    else {
 		cout << "(False)" << endl;
-		this->executeSuccess = false;
+		return false;
 	    }
 	}
 	else if (dflag) {
 	    if(S_ISDIR(buf.st_mode)) { // S_ISDIR returns non-zero if path points to a directory
 		cout << "(True)" << endl;
-		this->executeSuccess = true;
+		return true;
 	    }
 	    else {
 		cout << "(False)" << endl;
-		this->executeSuccess = false;
+		return false;
 	    }
 	}
 	else {
-	    this->executeSuccess = true; // If none of the nested branches are taken, but the main else branch is taken then return true
+	    return true; // If none of the nested branches are taken, but the main else branch is taken then return true
 	}
     }
 }
@@ -122,7 +122,4 @@ string TestExecute::get_command_full() {
 }
 string TestExecute::get_separator() {
     return this->separator;
-}
-bool TestExecute::get_success() {
-    return this->executeSuccess;
 }

@@ -17,12 +17,11 @@ class TestExecute : public ExecuteCommand {
     public:
 	TestExecute();
 	TestExecute(vector<string> enteredCommand, string sep);
-	virtual void execute();
+	virtual bool execute();
 	virtual void print_command();
 	virtual string get_command();
 	virtual string get_command_full();
 	virtual string get_separator();
-	virtual bool get_success();
 };
 
 #endif //__TestExecute_HPP__

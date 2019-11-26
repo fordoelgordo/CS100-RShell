@@ -7,7 +7,7 @@ Execute::Execute(char** enteredCommand, string sep) {
     this->command = enteredCommand;
     this->separator = sep;
 }
-void Execute::execute() {
+bool Execute::execute() {
     // Implement the command execution logic
     pid_t childPid;
     pid_t pid;
@@ -30,13 +30,13 @@ void Execute::execute() {
 	    exit(1); // Exit with error status 1
 	}
 	if (status > 0) {
-	    this->executeSuccess = false;
+	    return false;
 	}
 	else if (status == 0) {
-	    this->executeSuccess = true; // waitpid() returns 0 when child process returned 0
+	    return true; // waitpid() returns 0 when child process returned 0
 	}
 	else if (status == 1) {
-	    this->executeSuccess = false;
+	    return false;
 	}     			
     }
     else {
@@ -70,9 +70,6 @@ string Execute::get_command_full() {
 }
 string Execute::get_separator() {
     return this->separator;
-}
-bool Execute::get_success() {
-    return this->executeSuccess;
 }
 
 

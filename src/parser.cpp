@@ -1,11 +1,10 @@
 #include "parser.hpp"
+#include "factory.hpp"
 
-using namespace std;
-
-class ExecuteCommand;
+using  namespace std;
 
 Parser::Parser() {}
-ExecuteGroup* Parser:: parse(string userInput) {
+void Parser:: parse(string userInput) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> delim("", "&|;"); // Parse on & | and ; but keep these tokens in the output
     tokenizer tokens(userInput, delim);
@@ -14,7 +13,7 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Parse userInput into tokens using the ;, &&, || separators
     for (tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter) {
 	string parsed = *iter;
-	/* FIXME POTENTIALLY	
+	/*  POTENTIALLY	
 	if (parsed.find("\"") == string::npos) {
 	    parsed = regex_replace(parsed, regex("^ +"), "");
 	    parsed = regex_replace(parsed, regex(" +$"), ""); // Remove trailing whitespace from parsed token
@@ -94,7 +93,219 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Remove all instance of a single "&" and "|"
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
-    
+ 
+    // Parse out parentheses, place on separate lines
+    vector<string> finalCommands2;
+    stack<string> temp;
+    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+	int j = 0;
+	while (j >= 0 && j < finalCommands.at(i).size()) {   
+	    if (finalCommands.at(i).at(j) == '(' || finalCommands.at(i).at(j) == ')') {
+		if (finalCommands.at(i).at(j) == '(') {
+		    finalCommands2.push_back(string(1, finalCommands.at(i).at(j)));
+		}
+		if (finalCommands.at(i).at(j) == ')') {
+		    temp.push(string(1, finalCommands.at(i).at(j)));
+		}
+		finalCommands.at(i).erase(j, 1);
+		j = 0;
+	    }
+	    else if (finalCommands.at(i).find("(") == string::npos && finalCommands.at(i).find(")") == string::npos) {
+		finalCommands2.push_back(finalCommands.at(i));
+		j = finalCommands.at(i).size();
+	    }
+	    else {
+		++j;
+	    }
+	}
+	while (!temp.empty()) {
+	    finalCommands2.push_back(temp.top());
+	    temp.pop();
+	}
+    }
+   
+    // Evaluate connectors 
+    int leftParen = 0;
+    int rightParen = 0;
+    int connCount = 0;
+    vector<string> evalLeft;
+    vector<string> evalRight;
+    vector<string> parentheses;
+    queue<string> connectors;
+
+    for (unsigned int i = 0; i < finalCommands2.size(); ++i) {
+	if (finalCommands2.at(i) == "(") {
+	    ++leftParen;
+	}
+	else if (finalCommands2.at(i) == ")") {
+	    ++rightParen;
+	}
+	else if (finalCommands2.at(i) == "&&" || finalCommands2.at(i) == "||" || finalCommands2.at(i) == ";") {
+	    ++connCount;
+	}
+    }
+
+    // Conditional branch to check for correct parentheses, exit parsing if not
+    // Need to update the parentheses check function
+ 
+    // No connectors present in command sequence
+    if (connCount == 0) {
+	Factory* factory = new Factory();
+	ExecuteCommand* executable = nullptr;
+	if (finalCommands2.at(0) == "(") {
+	    executable = factory->create_command(finalCommands2.at(1), ";");
+	}
+	else {
+	    executable = factory->create_command(finalCommands2.at(0), ";");
+	}
+	executable->execute();
+    }
+     
+    // Handle a single connector 
+    if (connCount == 1) {
+	// Loop through the commands, add connectors to connector queue
+	for (unsigned int i = 0; i < finalCommands2.size(); ++i) {
+	    if (finalCommands2.at(i) == "(" || finalCommands2.at(i) == ")") {
+		// Do nothing, precedence does not matter in this situation
+	    }
+	    else if (finalCommands2.at(i) != "&&" && finalCommands2.at(i) != "||" && finalCommands2.at(i) != ";") {
+		if (connectors.empty()) {
+		    evalLeft.push_back(finalCommands2.at(i));
+		}
+		else {
+		    evalRight.push_back(finalCommands2.at(i));
+		}
+	    }
+	    else {
+		// Add connector to the queue
+		connectors.push(finalCommands2.at(i));
+	    }
+	}
+	bool success;
+	Factory* factory = new Factory();
+	ExecuteCommand* command = nullptr;
+	if (connectors.front() == "&&") {
+	    command = factory->create_command(evalLeft.at(0), ";");
+	    And* executable = new And();
+	    executable->execute(command->execute(), factory->create_command(evalRight.at(0), ";"));
+	}    
+	else if (connectors.front() == "||") { 
+	    command = factory->create_command(evalLeft.at(0), ";");
+	    Or* executable = new Or();
+	    executable->execute(command->execute(), factory->create_command(evalRight.at(0), ";"));
+	}
+	else if (connectors.front() == ";") { 
+	    if (evalLeft.at(0).substr(0,4) == "test" || evalLeft.at(0).substr(0,1) == "[") {
+		TestExecute* test = new TestExecute(create_stringvec(evalLeft.at(0)), connectors.front());
+		success = test->execute();
+	    }
+	    else {
+		Execute* command = new Execute(create_charstar(evalLeft.at(0)), connectors.front());
+		success = command->execute();
+	    }
+	    // Execute right branch no matter what when the connector is a ;
+	    if (evalRight.at(0).substr(0,4) == "test" || evalRight.at(0).substr(0,1) == "[") {
+		TestExecute* rtest = new TestExecute(create_stringvec(evalRight.at(0)), ";");
+		rtest->execute();
+	    }
+	    else {
+		Execute* rcommand = new Execute(create_charstar(evalRight.at(0)), ";");
+		rcommand->execute();
+	    }
+	}
+    }
+
+    /*
+    // Handle multiple connectors and precedence
+    int excecuteCount = 0;
+    if (connCount > 1) {
+	bool success;
+	for (unsigned int i = 0; i < finalCommands2.size(); ++i) {
+	    if (finalCommands2.at(i) == ")" && i == finalCommands2.size() - 1) {
+		// Done executing, reached the last parentheses in the command sequence
+	    }
+	    else { // Executing commands left in the commands vector
+		if (executeCount == 0 && connectors.empty()) { // Encountered first command to execute
+		    evalLeft.push_back(finalCommands2.at(i));
+		}
+		else {
+		    evalRight.push_back(finalCommands2.at(i));
+		    if (!connectors.empty()) {
+			if (connectors.size() >= 2) {
+			    connectors.pop();
+			}
+			if (i == finalCommands2.size() - 1) {
+			    if (connectors.front() == "&&") {				
+				if (evalLeft.at(0).substr(0,4) == "test" || evalLeft.at(0).substr(0,1) == "[") {
+				    TestExecute* test = new TestExecute(create_stringvec(evalLeft.at(0)), connectors.front());
+				    success = test->execute();
+				}
+				else {
+				    Execute* command = new Execute(create_charstar(evalLeft.at(0)), connectors.front());
+				    success = command->execute();
+				}
+				// Only execute right branch if left branch succeeds
+				if (success) {			
+				    if (evalRight.at(0).substr(0,4) == "test" || evalRight.at(0).substr(0,1) == "[") {
+					TestExecute* rtest = new TestExecute(create_stringvec(evalRight.at(0)), ";");
+					rtest->execute();
+				    }
+				    else {
+					Execute* rcommand = new Execute(create_charstar(evalRight.at(0)), ";");
+					rcommand->execute();
+				    }
+				}
+		 	    }
+			    else if (connectors.front() == "||") { 	
+				if (evalLeft.at(0).substr(0,4) == "test" || evalLeft.at(0).substr(0,1) == "[") {
+				    TestExecute* test = new TestExecute(create_stringvec(evalLeft.at(0)), connectors.front());
+				    success = test->execute();
+				}
+				else {
+				    Execute* command = new Execute(create_charstar(evalLeft.at(0)), connectors.front());
+				    success = command->execute();
+				}
+				// Only execute right branch if left branch fails
+				if (!success) {			
+				    if (evalRight.at(0).substr(0,4) == "test" || evalRight.at(0).substr(0,1) == "[") {
+					TestExecute* rtest = new TestExecute(create_stringvec(evalRight.at(0)), ";");
+					rtest->execute();
+				    }
+				    else {
+					Execute* rcommand = new Execute(create_charstar(evalRight.at(0)), ";");
+					rcommand->execute();
+				    }
+				}
+			    }	
+			    else if (connectors.front() == ";") {    
+				if (evalLeft.at(0).substr(0,4) == "test" || evalLeft.at(0).substr(0,1) == "[") {
+				    TestExecute* test = new TestExecute(create_stringvec(evalLeft.at(0)), connectors.front());
+				    success = test->execute();
+				}
+				else {
+				    Execute* command = new Execute(create_charstar(evalLeft.at(0)), connectors.front());
+				    success = command->execute();
+				}
+				// Execute right branch no matter what
+				if (evalRight.at(0).substr(0,4) == "test" || evalRight.at(0).substr(0,1) == "[") {
+				    TestExecute* rtest = new TestExecute(create_stringvec(evalRight.at(0)), ";");
+				    rtest->execute();
+				}
+				else {
+				    Execute* rcommand = new Execute(create_charstar(evalRight.at(0)), ";");
+				    rcommand->execute();
+				}
+			    }
+			    connectors.pop();
+			    evalRight.clear();
+			    ++executeCount;
+			}
+		    }
+		}		
+	    }
+	}   
+    */
+    /*
     // Create Executable objects
     ExecuteGroup* executable = new ExecuteGroup();
     string sep = ";";
@@ -137,8 +348,8 @@ ExecuteGroup* Parser:: parse(string userInput) {
 	    }
 	}
     }
+    */
        
-    return executable;
 }
 
 
@@ -208,4 +419,84 @@ void Parser::print_vector(const vector<string> & vec) {
     for (unsigned int i = 0; i < vec.size(); ++i) {
 	cout << vec.at(i) << endl;
     }
+}
+bool Parser::check_paren(const vector<string> & input) {
+    int leftParen = 0;
+    int rightParen = 0;
+    
+    for (unsigned int i = 0; i < input.size(); ++i) {
+	for (unsigned int j = 0; j < input.at(i).size(); ++j) {
+	    if (input.at(i).at(j) == '(') {
+		++leftParen;
+	    }
+	    if (input.at(i).at(j) == ')') {
+		++rightParen;
+	    }
+	}
+    }
+
+    if (leftParen != rightParen) {
+	return false;
+    }
+
+    return true;
+}
+vector<string> Parser::eval_precedence(vector<string> & input) {
+    vector<string> newCommands;
+    stack<char> opStack;
+    opStack.push('N');
+    queue<string> precQueue;
+    queue<string> normQueue;
+
+    int i = 0;
+    while (i >= 0 && i < input.size()) {	
+	if (input.at(i).find("(") == string::npos) {
+	    normQueue.push(input.at(i));
+	    ++i;
+	}
+	else {
+	    int k = i;
+	    int temp;
+	    while (k < input.size()) {
+		int j = 0;
+		while (j >= 0 && j < input.at(k).size()) {
+		    if (input.at(k).at(j) == '(' || input.at(k).at(j) == ')') {
+			opStack.push(input.at(k).at(j));
+			input.at(k).erase(j, 1);
+			j = 0;
+		    }
+		    else if (input.at(k).find("(") == string::npos && input.at(k).find(")") == string::npos) {
+			precQueue.push(input.at(k));
+			j = input.at(k).size();
+		    }
+		    else {
+			++j;
+		    }
+		}
+		if (opStack.top() == ')') {
+		    while (opStack.top() != '(') {
+			while (!precQueue.empty()) {
+			    newCommands.push_back(precQueue.front());
+			    precQueue.pop();
+			}
+			opStack.pop();
+		    }
+		    opStack.pop(); // Pop last '(' off the stack
+		    temp = k;
+		    k = input.size(); // So we fall out of the while loop
+		}
+		else {
+		    ++k;
+		    temp = k;
+		}
+	    }
+	    i = temp + 1;
+	}   
+    }
+    while (!normQueue.empty()) {
+	newCommands.push_back(normQueue.front());
+	normQueue.pop();	
+    }		
+    
+    return newCommands;    
 }

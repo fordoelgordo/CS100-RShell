@@ -1,8 +1,10 @@
 #include <iostream>
 #include "executecommand.hpp"
-#include "executegroup.hpp"
-#include "execute.hpp"
+//#include "executegroup.hpp"
+//#include "execute.hpp"
 #include "parser.hpp"
+#include "exit.hpp"
+#include "and.hpp"
 #include <string>
 #include <unistd.h> // To utilize execvp() command
 #include <stdio.h>
@@ -17,9 +19,11 @@ int main() {
 	cout << "$ "; // Print command prompt
 	getline(cin, userInput);		
 	Parser* parsed = new Parser();
-	ExecuteGroup* executable = parsed->parse(userInput);
+	parsed->parse(userInput);
+	//ExecuteGroup* executable = parsed->parse(userInput);
 	//executable->print_command();
-	executable->execute();    
+	//FIXME
+	//executable->execute();    
     }
 
     return 0;
