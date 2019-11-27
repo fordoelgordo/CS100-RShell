@@ -20,7 +20,7 @@ The compiled code generates an executable "rshell" that emulates command shell f
   * Child of ExecuteCommand, implements the "test" functionality which tests for the existence of a file or directory utilizing the stat() function.  This class also implements the abstract command "[]" which the user can pass to instantitate a "test" command.  This class checks for user-passed flags (-e, -d, -f) and analyzes the existence of the file or directory accordingly utilizing the S_ISREG and S_ISDIR functions.  Assumes that if no flag is expressely passed, default to the -e flag
 * Parser
   * Has parse() method which parses a user-entered string and returns a vector<string> which the ExecuteCommand subclasses can utilize to execute commands.  The parse method accounts for the precedence operators, comments (#), quotation marks (" ") and connectors (&& || ;)
- * Has execute() method which takes the vector<string> of parsed user input and executes the entered commands
+  * Has execute() method which takes the vector<string> of parsed user input and executes the entered commands
 * Factory
   * Child of Parser so that it can inherit some protected methods utilized in command processing.  Creates the appropriate ExecuteCommand object based on the parsed user input
 * And
