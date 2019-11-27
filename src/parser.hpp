@@ -14,14 +14,15 @@
 #include <queue>
 #include "and.hpp"
 #include "or.hpp"
+#include "semi.hpp"
 
 using namespace std;
-class And;
 
 class Parser {
     public: 
 	Parser();
-	void parse(string userInput);
+	vector<string> parse(string userInput);
+	bool execute(vector<string> userInput);
     protected:
 	char** create_charstar(const string & input);
 	vector<string> create_stringvec(const string & input);
