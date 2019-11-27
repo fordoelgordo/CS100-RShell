@@ -1,11 +1,10 @@
 #include "parser.hpp"
+#include "factory.hpp"
 
-using namespace std;
-
-class ExecuteCommand;
+using  namespace std;
 
 Parser::Parser() {}
-ExecuteGroup* Parser:: parse(string userInput) {
+vector<string> Parser:: parse(string userInput) {
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
     boost::char_separator<char> delim("", "&|;"); // Parse on & | and ; but keep these tokens in the output
     tokenizer tokens(userInput, delim);
@@ -14,7 +13,7 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Parse userInput into tokens using the ;, &&, || separators
     for (tokenizer::iterator iter = tokens.begin(); iter != tokens.end(); ++iter) {
 	string parsed = *iter;
-	/* FIXME POTENTIALLY	
+	/*  POTENTIALLY	
 	if (parsed.find("\"") == string::npos) {
 	    parsed = regex_replace(parsed, regex("^ +"), "");
 	    parsed = regex_replace(parsed, regex(" +$"), ""); // Remove trailing whitespace from parsed token
@@ -94,7 +93,210 @@ ExecuteGroup* Parser:: parse(string userInput) {
     // Remove all instance of a single "&" and "|"
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
     finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
+ 
+    // Parse out parentheses, place on separate lines
+    vector<string> finalCommands2;
+    stack<string> temp;
+    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+	int j = 0;
+	while (j >= 0 && j < finalCommands.at(i).size()) {   
+	    if (finalCommands.at(i).at(j) == '(' || finalCommands.at(i).at(j) == ')') {
+		if (finalCommands.at(i).at(j) == '(') {
+		    finalCommands2.push_back(string(1, finalCommands.at(i).at(j)));
+		}
+		if (finalCommands.at(i).at(j) == ')') {
+		    temp.push(string(1, finalCommands.at(i).at(j)));
+		}
+		finalCommands.at(i).erase(j, 1);
+		j = 0;
+	    }
+	    else if (finalCommands.at(i).find("(") == string::npos && finalCommands.at(i).find(")") == string::npos) {
+		finalCommands2.push_back(finalCommands.at(i));
+		j = finalCommands.at(i).size();
+	    }
+	    else {
+		++j;
+	    }
+	}
+	while (!temp.empty()) {
+	    finalCommands2.push_back(temp.top());
+	    temp.pop();
+	}
+    }
+
+    return finalCommands2;
+}
+bool Parser::execute(vector<string> userInput) {
+    // Evaluate connectors 
+    int leftParen = 0;
+    int rightParen = 0;
+    int connCount = 0;
+    bool success = true;
+    vector<string> evalLeft;
+    vector<string> evalRight;
+    vector<string> parentheses;
+    queue<string> connectors;
+
+    for (unsigned int i = 0; i < userInput.size(); ++i) {
+	if (userInput.at(i) == "(") {
+	    ++leftParen;
+	}
+	else if (userInput.at(i) == ")") {
+	    ++rightParen;
+	}
+	else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") {
+	    ++connCount;
+	}
+    }
+
+    // Conditional branch to check for correct parentheses, exit parsing if not
+    // Need to update the parentheses check function
     
+    // No connectors present in command sequence
+    if (connCount == 0) {
+	Factory* factory = new Factory();
+	ExecuteCommand* executable = nullptr;
+	for (unsigned int i = 0; i < userInput.size(); ++i) {
+	    if (userInput.at(i) != ")" && userInput.at(i) != "(") {
+		executable = factory->create_command(userInput.at(i), ";");
+		return executable->execute();
+	    }
+	}
+    }
+     
+    // Handle a single connector 
+    if (connCount == 1) {
+	// Loop through the commands, add connectors to connector queue
+	for (unsigned int i = 0; i < userInput.size(); ++i) {
+	    if (userInput.at(i) == "(" || userInput.at(i) == ")") {
+		// Do nothing, precedence does not matter in this situation
+	    }
+	    else if (userInput.at(i) != "&&" && userInput.at(i) != "||" && userInput.at(i) != ";") {
+		if (connectors.empty()) {
+		    evalLeft.push_back(userInput.at(i));
+		}
+		else {
+		    evalRight.push_back(userInput.at(i));
+		}
+	    }
+	    else {
+		// Add connector to the queue
+		connectors.push(userInput.at(i));
+	    }
+	}
+	Factory* factory = new Factory();
+	ExecuteCommand* command = nullptr;
+	if (connectors.front() == "&&") {
+	    command = factory->create_command(evalLeft.at(0), ";");
+	    And* executable = new And();
+	    return executable->execute(command->execute(), factory->create_command(evalRight.at(0), ";"));
+	}    
+	else if (connectors.front() == "||") { 
+	    command = factory->create_command(evalLeft.at(0), ";");
+	    Or* executable = new Or();
+	    return executable->execute(command->execute(), factory->create_command(evalRight.at(0), ";"));
+	}
+	else if (connectors.front() == ";") { 
+	    command = factory->create_command(evalLeft.at(0), ";");
+	    Semi* executable = new Semi();
+	    return executable->execute(command->execute(), factory->create_command(evalRight.at(0), ";"));
+	}
+    }
+
+    // Handle multiple connectors and precedence operators
+    int executeCount = 0;
+    int openParen = 0;
+    int closeParen = 0;
+    Factory* factory = new Factory();
+    if (connCount > 1) {
+	for (unsigned int i = 0; i < userInput.size(); ++i) {
+	    if (userInput.at(i) == ")" /* || i == userInput.size() - 1*/) {
+		// Done executing, reached the last parentheses in the command sequence or reached
+		// the end of the command sequence
+		return success;
+	    }
+	    else if (userInput.at(i) == "(") { // Handle parentheses recursively
+		int j = i;
+		for (j = i + 1; j < userInput.size(); ++j) {
+		    if (userInput.at(j) == "(") {
+	    		++openParen;
+		    }
+		    if (userInput.at(j) == ")") {
+			++closeParen;
+		    }
+		    if (openParen == closeParen - 1) {
+			break; // exit for loop when we've encountered the matching )
+		    }
+		    parentheses.push_back(userInput.at(j));
+		}
+		i = j;
+		Parser* parsed = new Parser();
+		if ((connectors.front() == "&&" && success) || (connectors.front() == "||" && !success) || connectors.front() == ";") {
+		    success = parsed->execute(parentheses);
+		    connectors.pop();
+		}
+		else {
+		    success = parsed->execute(parentheses);
+		}
+		++executeCount;
+		parentheses.clear();
+	    }
+	    else if (userInput.at(i) != "&&" && userInput.at(i) != "||" && userInput.at(i) != ";") {
+		if (executeCount == 0 && connectors.empty()) {
+		    evalLeft.push_back(userInput.at(i));
+		}
+		else {
+		    evalRight.push_back(userInput.at(i));
+		    if (!connectors.empty()) {
+			if (connectors.front() == "&&") {
+			    And* executable = new And();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+			}
+			else if (connectors.front() == "||") {
+			    Or* executable = new Or();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+			}
+			else if (connectors.front() == ";") {
+			    Semi* executable = new Semi();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+			}
+			connectors.pop();
+			++executeCount;
+			evalRight.clear();
+		    }
+		}
+	    }
+	    else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") {
+		connectors.push(userInput.at(i));
+		if (!evalLeft.empty() && !connectors.empty()) {
+		    ExecuteCommand* command = factory->create_command(evalLeft.at(0), ";");
+		    success = command->execute();
+		    ++executeCount;
+		    evalLeft.clear();
+		}	
+		else if (!evalRight.empty() && !connectors.empty()) {
+		    if (connectors.front() == "&&") {
+			And* executable = new And();
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+		    }
+		    else if (connectors.front() == "||") {
+			Or* executable = new Or();
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+		    }
+		    else if (connectors.front() == ";") {
+			Semi* executable = new Semi();
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
+		    }
+		    ++executeCount;
+		    evalRight.clear();	
+		}
+	    }
+	}	    
+    }
+    
+    return success;
+}
+    /*
     // Create Executable objects
     ExecuteGroup* executable = new ExecuteGroup();
     string sep = ";";
@@ -137,9 +339,7 @@ ExecuteGroup* Parser:: parse(string userInput) {
 	    }
 	}
     }
-       
-    return executable;
-}
+    */
 
 
 // Implement helper functions to main parsing function
@@ -208,4 +408,84 @@ void Parser::print_vector(const vector<string> & vec) {
     for (unsigned int i = 0; i < vec.size(); ++i) {
 	cout << vec.at(i) << endl;
     }
+}
+bool Parser::check_paren(const vector<string> & input) {
+    int leftParen = 0;
+    int rightParen = 0;
+    
+    for (unsigned int i = 0; i < input.size(); ++i) {
+	for (unsigned int j = 0; j < input.at(i).size(); ++j) {
+	    if (input.at(i).at(j) == '(') {
+		++leftParen;
+	    }
+	    if (input.at(i).at(j) == ')') {
+		++rightParen;
+	    }
+	}
+    }
+
+    if (leftParen != rightParen) {
+	return false;
+    }
+
+    return true;
+}
+vector<string> Parser::eval_precedence(vector<string> & input) {
+    vector<string> newCommands;
+    stack<char> opStack;
+    opStack.push('N');
+    queue<string> precQueue;
+    queue<string> normQueue;
+
+    int i = 0;
+    while (i >= 0 && i < input.size()) {	
+	if (input.at(i).find("(") == string::npos) {
+	    normQueue.push(input.at(i));
+	    ++i;
+	}
+	else {
+	    int k = i;
+	    int temp;
+	    while (k < input.size()) {
+		int j = 0;
+		while (j >= 0 && j < input.at(k).size()) {
+		    if (input.at(k).at(j) == '(' || input.at(k).at(j) == ')') {
+			opStack.push(input.at(k).at(j));
+			input.at(k).erase(j, 1);
+			j = 0;
+		    }
+		    else if (input.at(k).find("(") == string::npos && input.at(k).find(")") == string::npos) {
+			precQueue.push(input.at(k));
+			j = input.at(k).size();
+		    }
+		    else {
+			++j;
+		    }
+		}
+		if (opStack.top() == ')') {
+		    while (opStack.top() != '(') {
+			while (!precQueue.empty()) {
+			    newCommands.push_back(precQueue.front());
+			    precQueue.pop();
+			}
+			opStack.pop();
+		    }
+		    opStack.pop(); // Pop last '(' off the stack
+		    temp = k;
+		    k = input.size(); // So we fall out of the while loop
+		}
+		else {
+		    ++k;
+		    temp = k;
+		}
+	    }
+	    i = temp + 1;
+	}   
+    }
+    while (!normQueue.empty()) {
+	newCommands.push_back(normQueue.front());
+	normQueue.pop();	
+    }		
+    
+    return newCommands;    
 }

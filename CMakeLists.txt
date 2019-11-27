@@ -10,16 +10,24 @@ ADD_EXECUTABLE(test
     ${PROJECT_SOURCE_DIR}/unit_test.cpp
     ${PROJECT_BINARY_DIR}/parser.cpp
     ${PROJECT_BINARY_DIR}/execute.cpp
-    ${PROJECT_BINARY_DIR}/executegroup.cpp
     ${PROJECT_BINARY_DIR}/testexecute.cpp
+    ${PROJECT_BINARY_DIR}/and.cpp
+    ${PROJECT_BINARY_DIR}/or.cpp
+    ${PROJECT_BINARY_DIR}/semi.cpp
+    ${PROJECT_BINARY_DIR}/exit.cpp
+    ${PROJECT_BINARY_DIR}/factory.cpp
 )
 
 ADD_EXECUTABLE(rshell
     ${PROJECT_BINARY_DIR}/rshell.cpp
     ${PROJECT_BINARY_DIR}/parser.cpp
     ${PROJECT_BINARY_DIR}/execute.cpp
-    ${PROJECT_BINARY_DIR}/executegroup.cpp
     ${PROJECT_BINARY_DIR}/testexecute.cpp
+    ${PROJECT_BINARY_DIR}/and.cpp
+    ${PROJECT_BINARY_DIR}/or.cpp
+    ${PROJECT_BINARY_DIR}/semi.cpp
+    ${PROJECT_BINARY_DIR}/exit.cpp
+    ${PROJECT_BINARY_DIR}/factory.cpp
 )
 
 TARGET_LINK_LIBRARIES(test gtest)
