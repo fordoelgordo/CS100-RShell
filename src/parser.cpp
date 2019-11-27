@@ -210,99 +210,88 @@ bool Parser::execute(vector<string> userInput) {
     Factory* factory = new Factory();
     if (connCount > 1) {
 	for (unsigned int i = 0; i < userInput.size(); ++i) {
-	    if (userInput.at(i) == ")" || i == userInput.size() - 1) {
-		// Done executing, reached the last parentheses in the command sequence
+	    if (userInput.at(i) == ")" /* || i == userInput.size() - 1*/) {
+		// Done executing, reached the last parentheses in the command sequence or reached
+		// the end of the command sequence
 		return success;
 	    }
+	    else if (userInput.at(i) == "(") { // Handle parentheses recursively
+		int j = i;
+		for (j = i + 1; j < userInput.size(); ++j) {
+		    if (userInput.at(j) == "(") {
+	    		++openParen;
+		    }
+		    if (userInput.at(j) == ")") {
+			++closeParen;
+		    }
+		    if (openParen == closeParen - 1) {
+			break; // exit for loop when we've encountered the matching )
+		    }
+		    parentheses.push_back(userInput.at(j));
+		}
+		i = j;
+		Parser* parsed = new Parser();
+		if ((connectors.front() == "&&" && success) || (connectors.front() == "||" && !success) || connectors.front() == ";") {
+		    success = parsed->execute(parentheses);
+		    connectors.pop();
+		}
+		else {
+		    success = parsed->execute(parentheses);
+		}
+		++executeCount;
+		parentheses.clear();
+	    }
 	    else if (userInput.at(i) != "&&" && userInput.at(i) != "||" && userInput.at(i) != ";") {
-		if (executeCount == 0 && connectors.empty()) { // First command hasn't executed yet
+		if (executeCount == 0 && connectors.empty()) {
 		    evalLeft.push_back(userInput.at(i));
 		}
 		else {
 		    evalRight.push_back(userInput.at(i));
-		    ExecuteCommand* rCommand = factory->create_command(evalRight.at(0), ";");
 		    if (!connectors.empty()) {
-			if (connectors.size() >= 2) {
-			    connectors.pop();
+			if (connectors.front() == "&&") {
+			    And* executable = new And();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 			}
-			if (i == userInput.size() - 1) {
-			    if (connectors.front() == "&&") {
-				And* executable = new And();
-				success = executable->execute(success, rCommand);
-			    }
-    			    else if (connectors.front() == "||") {	
-				Or* executable = new Or();
-				success = executable->execute(success, rCommand);
-			    }
-			    else if (connectors.front() == ";") {
-				Semi* executable = new Semi();
-				success = executable->execute(success, rCommand);
-			    }
-			    connectors.pop();
-			    evalRight.clear();
-			    ++executeCount;
+			else if (connectors.front() == "||") {
+			    Or* executable = new Or();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 			}
-			else if (userInput.at(i + 1) == "&&" || userInput.at(i + 1) == "||" || userInput.at(i + 1) == ";") {
-			    if (connectors.front() == "&&") {
-				And* executable = new And();
-				success = executable->execute(success, rCommand);
-			    }
-			    else if (connectors.front() == "||") {
-				Or* executable = new Or();
-				success = executable->execute(success, rCommand);
-			    }
-			    else if (connectors.front() == ";") {
-				Semi* executable = new Semi();
-				success = executable->execute(success, rCommand);
-			    }	
+			else if (connectors.front() == ";") {
+			    Semi* executable = new Semi();
+			    success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 			}
-			else if (userInput.at(i + 1) == ")" || i + 1 == userInput.size() - 1) {					
-			    if (connectors.front() == "&&") {
-				And* executable = new And();
-				success = executable->execute(success, rCommand);
-			    }
-			    else if (connectors.front() == "||") {
-				Or* executable = new Or();
-				success = executable->execute(success, rCommand);
-			    }
-			    else if (connectors.front() == ";") {
-				Semi* executable = new Semi();
-				success = executable->execute(success, rCommand);
-			    }	
-			    connectors.pop();
-			    evalRight.clear();
-			    ++executeCount;
-			}
+			connectors.pop();
+			++executeCount;
+			evalRight.clear();
 		    }
 		}
 	    }
-	    else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") { // Checked for ), end of string, and connectors, so have to be at a connector if this branch is reached
+	    else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") {
 		connectors.push(userInput.at(i));
-		if (!connectors.empty() && !evalLeft.empty()) {
+		if (!evalLeft.empty() && !connectors.empty()) {
 		    ExecuteCommand* command = factory->create_command(evalLeft.at(0), ";");
 		    success = command->execute();
 		    ++executeCount;
 		    evalLeft.clear();
-		}
-		else if (!connectors.empty() && !evalRight.empty()) {
-		    ExecuteCommand* command = factory->create_command(evalRight.at(0), ";");
+		}	
+		else if (!evalRight.empty() && !connectors.empty()) {
 		    if (connectors.front() == "&&") {
 			And* executable = new And();
-			success = executable->execute(success, command);
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 		    }
-		    else if (connectors.front() == "||") {	
+		    else if (connectors.front() == "||") {
 			Or* executable = new Or();
-			success = executable->execute(success, command);
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 		    }
 		    else if (connectors.front() == ";") {
 			Semi* executable = new Semi();
-			success = executable->execute(command->execute(), command);
+			success = executable->execute(success, factory->create_command(evalRight.at(0), ";"));
 		    }
 		    ++executeCount;
-		    evalRight.clear();
+		    evalRight.clear();	
 		}
-	    }	
-	}
+	    }
+	}	    
     }
     
     return success;

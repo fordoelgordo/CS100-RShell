@@ -12,5 +12,5 @@ bool Or::execute(bool leftEval, ExecuteCommand* rightEval) {
 	return rightEval->execute();
     }
 
-    return false;
+    return leftEval;
 }
