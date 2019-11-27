@@ -1,0 +1,5 @@
+(echo A && echo B) || (echo C && echo D)
+echo test && (echo mars; echo pluto)
+(pwd && echo test) || (ls || test -e src/)
+(echo "hello test" || echo hello && (pwd && echo "this should work))
+exit
