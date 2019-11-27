@@ -1,0 +1,9 @@
+ls -a;
+echo hello
+mkdir test
+echo "Hello World" # && echo test
+git status;
+ls # -lR
+touch test.cpp # test
+rm test.cpp
+exit

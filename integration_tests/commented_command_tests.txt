@@ -1,0 +1,5 @@
+ls # hello
+ls -a; echo hello # ignore after this
+echo world && ls #; git status
+echo "Hi this is a test" #testing 1 2 3 4
+exit

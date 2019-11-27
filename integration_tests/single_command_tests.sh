@@ -1,11 +1,3 @@
 #!/bin/bash
 
-../rshell < "ls -a;"
-../rshell < "echo hello"
-../rshell < "mkdir test"
-../rshell < "echo \"Hello World\" # && echo test"
-../rshell < "git status;"
-../rshell < "ls # -lR"
-../rshell < "touch test.cpp # test"
-../rshell < "rm test.cpp"
-../rshell < "exit"
+~/assignment-assign_jeff_ford/rshell < ~/assignment-assign_jeff_ford/integration_tests/single_command_tests.txt

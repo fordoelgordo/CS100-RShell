@@ -1,0 +1,7 @@
+ls -a; echo hello && mkdir test
+echo world && echo hello || echo test
+echo world && echo hello # echo dont echo
+touch test.cpp || echo hello
+ls && rm test.cpp; mkdir test
+rm -r test || echo cleared && ls; exit
+

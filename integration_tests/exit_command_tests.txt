@@ -1,0 +1,6 @@
+exit #test
+exit #comment1 #comment2
+ls; exit
+echo hello; mkdir test; rm -r test && exit
+exit
+

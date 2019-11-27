@@ -1,8 +1,3 @@
 #!/bin/bash
 
-../rshell < "ls -a; echo hello && mkdir test"
-../rshell < "echo world && echo hello || echo test"
-../rshell < "echo world && echo hello # echo dont echo"
-../rshell < "touch test.cpp || echo hello"
-../rshell < "ls && rm test.cpp; mkdir test"
-../rshell < "rm -r test || echo cleared && ls; exit"
+~/assignment-assign_jeff_ford/rshell < ~/assignment-assign_jeff_ford/integration_tests/multiple_commands_tests.txt
