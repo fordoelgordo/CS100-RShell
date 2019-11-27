@@ -124,6 +124,23 @@ vector<string> Parser:: parse(string userInput) {
 	}
     }
 
+    // Check for matching parentheses
+    int leftParen = 0;
+    int rightParen = 0;
+    for (unsigned int i = 0; i < finalCommands2.size(); ++i) {
+	if (finalCommands2.at(i) == ")") {
+	    ++rightParen;
+	}
+	if (finalCommands2.at(i) == "(") {
+	    ++leftParen;
+	}
+    }
+    
+    if (leftParen != rightParen) {
+	cout << "Error: non-matching set of parentheses entered" << endl;
+	exit(1);
+    }
+    
     return finalCommands2;
 }
 bool Parser::execute(vector<string> userInput) {
