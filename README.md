@@ -4,73 +4,29 @@ Ford St. John, 862125078
 Jeffreyson Nguyen, 862154834
 
 ## Introduction
-This program will be able to generate an executable that when exercised takes in user input and executes any of the executable programs located in the PATH environment variable locations.  The composite design pattern will be followed, meaning that the client will have a simple and intuitive interface to work with that will hide all unnecessary functional implmentation from the user.    
+The compiled code generates an executable "rshell" that emulates command shell functionality.  The rshell currently supports commands availabile through the PATH variable, the "test" command (and it's symbolic equivalent []) along with user-passed flags which test for file and directory existence, precedence evaluation using parentheses, and chained execution of supported commands using the connectors &&, || and ;.  As with a normal command shell, users can enter any number of commands in infinitum until "exit" is entered which effectively exits the shell.  Initial input validation is only performed on the correct passing of precedence operators.  Otherwise, invalid user input is accepted (e.g un-executable commands) at which point the program will terminate upon failure to excute.
 
 ## Diagram
 ![OMT Diagram](https://github.com/cs100/assignment-git_shorty_assn/blob/master/images/Rshell%20OMT%20.png)
 
 ## Classes
 * ExecuteCommand
-  * Will hold a list of "Executable" objects that are the commands passed in from the user
-  * Has a Execute() function which iterates through the list of Executables, executing each one depending on the arguments and connector associated with each object
-  * Parses the user input using the Tokenizer class in the c++ boost library
+  * Abstract base class that holds a virtual void execute() = 0 public function
+* Exit
+  * Child of ExecuteCommand, implements the "exit" functionality so that when the user enters "exit" the shell executable ends
+* Execute
+  * Child of ExecuteCommand, implements all executables associated with the PATH environment variable utilizing execvp(), waitpid() and fork()
+* TestExecute
+  * Child of ExecuteCommand, implements the "test" functionality which tests for the existence of a file or directory utilizing the stat() function.  This class also implements the abstract command "[]" which the user can pass to instantitate a "test" command.  This class checks for user-passed flags (-e, -d, -f) and analyzes the existence of the file or directory accordingly utilizing the S_ISREG and S_ISDIR functions.  Assumes that if no flag is expressely passed, default to the -e flag
 * Parser
-  * Implementation of the method for parsing user input into separate Executable objects
-* Executable
-  * Holds a vector<string> of arguments associated with the executable
-  * Holds the connector associated with the executable
-  * Holds a boolean "success" internal member indicating if the executable succeeded or failed
-  * Holds a vector<children> that are dependenent on the connector and boolean success variable
-* Fork
-  * To use with Executable object
-* Waitpid
-  * To use with Executable object
-* Execvp
-  * To use with Executable object
-* Connector
-  * Superclass that has subclasses associated with each of the different possible connectors
-* Semicolon
-    * Inherited from Connector, describes the evaluation of an Executable with a ; connector
+  * Has parse() method which parses a user-entered string and returns a vector<string> which the ExecuteCommand subclasses can utilize to execute commands.  The parse method accounts for the precedence operators, comments (#), quotation marks (" ") and connectors (&& || ;)
+ * Has execute() method which takes the vector<string> of parsed user input and executes the entered commands
+* Factory
+  * Child of Parser so that it can inherit some protected methods utilized in command processing.  Creates the appropriate ExecuteCommand object based on the parsed user input
 * And
-    * Inherited from Connector, describes the evaluation of an Executable with a && connector
+  * Holds an ExecuteCommand* reference and implements the logic of two commands separated by the connector && in which the "right" command of structure leftCommand && rightCommand is executed if an only if leftCommand's execution evaluates to true
 * Or
-    * Inherited from Connector, describes the method of an Executable with a || connector
-
-## Prototypes/Research
-We created a prototype user input parsing function that parses user input into executable commands.  The prototype was implemented utilizing the Tokenizer class in the c++ boost library.  If the user enters the command:
-```shell
-$ ls -a; echo hello && mkdir test || echo world; git status
-```
-The function will parse the commands into the following:
-```shell
-$ ls -a
-$ echo hello
-$ mkdir test
-$ echo world
-$ git status
-```
-The parser can be compiled with the following command:
-```shell
-$ g++ -g -w -Wall -Werror parser.cpp
-```
-The parser also saves the connectors (; && ||) so that the commands can be properly executed (e.g. all commands followed by ; are executed, commands followed by && are executed, with the command following the && executed if and only if the first command succeeded, and commands followed by || are always executed with the command followed by || executed if and only if the first command failed).  
-  
-We also tested how the fork(), waitpid() and execvp() functions work, as we had never worked with those before.  We created fork.cpp, waitpid.cpp and execvp.cpp in the prototype/ directory which we ran to get a general sense of how these functions operate.  These functions can be combined together to simulate a functioning command shell similar to the existing command line interface.  The fork() function duplicates the existing process, and can be used to ensure entered commands execute without terminating the program.  The waitpid() function allows the parent process to suspend while child processes execute, which will enable the shell to continue running in the background while user-entered commands are executed.  It will return a status indicating if the passed in commands executed as intended or not.  Finally, the execvp() function is what actually executes the commands located in the $PATH variable.  The function takes a command and a character vector of arguments terminated with NULL and executes the command, provided it is a valid executable within the $PATH variable.  We created a prototype test_functions.cpp that we used to test how all 3 functions can work together to execute user-entered commands.
-
-## Development and Testing Roadmap
-1. Create Parser class [#1](https://github.com/cs100/assignment-git_shorty_assn/issues/1)
-   1. Create unit tests to ensure Parser class correctly parses user input [#2](https://github.com/cs100/assignment-git_shorty_assn/issues/2)
-   1. Create unit test to ensure Parser correctly creates Executable objects [#3](https://github.com/cs100/assignment-git_shorty_assn/issues/3)
-   1. Create unit test to ensure Executable children are created correctly [#4](https://github.com/cs100/assignment-git_shorty_assn/issues/4)
-1. Create Connector superclass [#5](https://github.com/cs100/assignment-git_shorty_assn/issues/5)
-1. Create Connector subclasses and associated functionality [#6](https://github.com/cs100/assignment-git_shorty_assn/issues/6)
-   1. Create unit test ensuring correct Connector method is called on parsed user input [#7](https://github.com/cs100/assignment-git_shorty_assn/issues/7)
-1. Create Executable class [#8](https://github.com/cs100/assignment-git_shorty_assn/issues/8)
-   1. Create unit tests to ensure Executable object runs the correct shell executable associated with the user input [#9](https://github.com/cs100/assignment-git_shorty_assn/issues/9)
-   1. Create integration test to ensure Executables work with Connector class to execute correct chain of arguments [#10](https://github.com/cs100/assignment-git_shorty_assn/issues/10)
-1. Create ExecuteCommand interface [#11](https://github.com/cs100/assignment-git_shorty_assn/issues/11)
-   1. Create unit test to ensure list of executables executes in the correct order with correct error outputs [#12](https://github.com/cs100/assignment-git_shorty_assn/issues/12) | [#13](https://github.com/cs100/assignment-git_shorty_assn/issues/13)
-1. Create integration test for Parser and ExecuteCommand [#14](https://github.com/cs100/assignment-git_shorty_assn/issues/14)
-1. Create integartion test that tests functionality of entire system with "client" interface [#15](https://github.com/cs100/assignment-git_shorty_assn/issues/15)
-
-
+  * Holds an ExecuteCommand* reference and implements the logic of two commands separated by the connector ||.  Or will execute rightCommand in the structure leftCommand || rightCommand if and only if leftCommand's execution evaluates to false
+* Semi
+  * Holds an ExecuteCommand* reference and implements the logic of two commands separated by the connector ;.  Semi will execute rightCommand in the structure leftCommand ; rightCommand regardless if leftCommand's execution evaluates to true or false
+ 
