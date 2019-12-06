@@ -5,9 +5,12 @@
 #include <string>
 #include <iostream>
 #include <unistd.h> // To use the execvp() function
+#include <sys/types.h>
 #include <sys/wait.h> // To execute waitpid() command which allows the parent process to wait for the child
 #include <sys/stat.h> // To execute stat() command which is used to check if a file path exists or not
 #include <cstring> // To use strcpy command
+#include <stdio.h>
+#include <fcntl.h>
 
 using namespace std;
 
