@@ -21,7 +21,7 @@ bool InputRedirect::execute() {
         dup2(open_file, 1);
         close(open_file);
 
-        bool process = right->execute();
+        bool process = this->right->execute();
 
         dup2(open_file, 0);
         close(0);
