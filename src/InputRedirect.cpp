@@ -11,7 +11,7 @@ bool InputRedirect::execute() {
 
         int std = dup(0);
 
-        int open_file = open(this->right, O_RDWR | O_CREAT);
+        int open_file = open(this->left, O_RDWR | O_CREAT);
 
         if(open_file < 0) {
                 perror("Error opening Out file");
@@ -21,7 +21,7 @@ bool InputRedirect::execute() {
         dup2(open_file, 1);
         close(open_file);
 
-        bool process = left->execute();
+        bool process = right->execute();
 
         dup2(open_file, 0);
         close(0);

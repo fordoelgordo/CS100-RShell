@@ -10,8 +10,8 @@ OutputRedirect::OutputRedirect(string left, ExecuteCommand *r) {
 bool OutputRedirect::execute() {
 
         int std = dup(1);
-				//need to fix this->right(just there for placement)
-        int open_file = open(this->right, O_RDWR | O_CREAT);
+				//need to fix this->left(just there for placement)
+        int open_file = open(this->left, O_RDWR | O_CREAT);
 
         if(open_file < 0) {
                 perror("Error opening Out file");
