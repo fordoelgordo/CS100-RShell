@@ -8,23 +8,20 @@ using namespace std;
 class OutputRedirect : public ExecuteCommand {
 
 protected:
-        ExecuteCommand *left;
-	string right;
-        //ExecuteCommand *right;
+	string left;
+        ExecuteCommand *right;
 
 public:
         OutputRedirect() {};
-	OutputRedirect(ExecuteCommand *1, string right);
-        //OutputRedirect(ExecuteCommand *l, ExecuteCommand *r);
+	OutputRedirect(string left, ExecuteCommand *r);
         bool execute();
         void print_command();
         string get_command();
         string get_command_full();
         string get_seperator();
 
-        void set_left(ExecuteCommand *l);
-	void set_right(string right);
-        //void set_right(ExecuteCommand *r);
+        void set_left(string left);
+        void set_right(ExecuteCommand *r);
 }
 
 #endif //__OUTPUTREDIRECT_HPP__
