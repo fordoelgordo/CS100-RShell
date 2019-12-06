@@ -9,11 +9,13 @@ class OutputRedirect : public ExecuteCommand {
 
 protected:
         ExecuteCommand *left;
-        ExecuteCommand *right;
+	string right;
+        //ExecuteCommand *right;
 
 public:
         OutputRedirect() {};
-        OutputRedirect(ExecuteCommand *l, ExecuteCommand *r);
+	OutputRedirect(ExecuteCommand *1, string right);
+        //OutputRedirect(ExecuteCommand *l, ExecuteCommand *r);
         bool execute();
         void print_command();
         string get_command();
@@ -21,7 +23,8 @@ public:
         string get_seperator();
 
         void set_left(ExecuteCommand *l);
-        void set_right(ExecuteCommand *r);
+	void set_right(string right);
+        //void set_right(ExecuteCommand *r);
 }
 
 #endif //__OUTPUTREDIRECT_HPP__

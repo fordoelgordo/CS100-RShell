@@ -2,10 +2,15 @@
 
 // ">" ">>"
 
-OutputRedirect::OutputRedirect(ExecuteCommand *l, ExecuteCommand *r) {
+OutputRedirect::OutputRedirect(ExecuteCommand *l, string right) {
         this->left = l;
         this->right = r;
 }
+
+/*OutputRedirect::OutputRedirect(ExecuteCommand *l, ExecuteCommand *r) {
+        this->left = l;
+        this->right = r;
+}*/
 
 bool OutputRedirect::execute() {
 
@@ -33,9 +38,12 @@ void OutputRedirect::set_left(ExecuteCommand *l) {
         this->left = l;
 }
 
-void OutputRedirect::set_right(ExecuteCommand *r) {
-        this->right = r;
+void OutputRedirect::set_right(string right) {
+	this->right = r;
 }
+/*void OutputRedirect::set_right(ExecuteCommand *r) {
+        this->right = r;
+}*/
 
 void OutputRedirect::print_command() {
 
