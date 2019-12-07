@@ -3,7 +3,7 @@
 // ">" ">>"
 
 OutputRedirect::OutputRedirect(string left, ExecuteCommand *r) {
-        this->left = l;
+        this->left = left;
         this->right = r;
 }
 
@@ -30,7 +30,7 @@ bool OutputRedirect::execute() {
 }
 
 void OutputRedirect::set_left(string left) {
-        this->left = l;
+        this->left = left;
 }
 
 void OutputRedirect::set_right(ExecuteCommand *r) {

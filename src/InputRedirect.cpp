@@ -3,7 +3,7 @@
 // "<" 
 
 InputRedirect::InputRedirect(string left, ExecuteCommand *r) {
-        this->left = l;
+        this->left = left;
         this->right = r;
 }
 
@@ -30,7 +30,7 @@ bool InputRedirect::execute() {
 }
 
 void InputRedirect::set_left(string left) {
-        this->left = l;
+        this->left = left;
 }
 
 void InputRedirect::set_right(ExecuteCommand *r) {
