@@ -3,10 +3,32 @@
 #include "../src/executecommand.hpp"
 #include "../src/parser.hpp"
 #include "../src/testexecute.hpp"
+#include "../src/outputredirect.hpp"
 #include <string>
 #include <vector>
 
 using namespace std;
+
+char** create_charstar(const string & input) {
+    char* cmd;
+    vector<char*> args;
+    char* temp;
+    cmd = (char*)input.c_str();
+    temp = strtok(cmd, " ");
+    while (temp != NULL) {
+	if (temp != '\0') {
+	    args.push_back(temp);
+	}
+	temp = strtok(NULL, " ");
+    }
+    char** arguments = new char*[args.size() + 1];
+    for (unsigned int i = 0; i < args.size(); ++i) {
+	arguments[i] = args.at(i);
+    }
+    arguments[args.size()] = NULL;
+    
+    return arguments;
+}
 
 // Unit tests on Parser class, which tests user input parsing functionality
 TEST(ParserTest, SimpleCommand) {
@@ -105,6 +127,22 @@ TEST(TestExecuteTest, dflagFail) {
     string input = "test -d ~/assignment-assign_jeff_ford/src/testexecute.hpp";
     Parser* parsed = new Parser();
     EXPECT_FALSE(parsed->execute(parsed->parse(input)));
+}
+
+// Unit test on output redirection
+TEST(TestOutRedirect, EchoTest) {
+    string input = "echo \"Hello World!\"";
+    string output = "output.txt";
+    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
+    OutRedirect* out = new OutRedirect(execute, output);
+    EXPECT_EQ(true, out->execute());
+}
+TEST(TestOutRedirect, PWDOut) {
+    string input = "pwd";
+    string output = "outfile";
+    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
+    OutRedirect* out = new OutRedirect(execute, output);
+    EXPECT_EQ(true, out->execute());
 }
 
 // main() function to execute tests 

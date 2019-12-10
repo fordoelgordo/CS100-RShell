@@ -16,6 +16,7 @@ ADD_EXECUTABLE(test
     ${PROJECT_BINARY_DIR}/semi.cpp
     ${PROJECT_BINARY_DIR}/exit.cpp
     ${PROJECT_BINARY_DIR}/factory.cpp
+    ${PROJECT_BINARY_DIR}/outputredirect.cpp
 )
 
 ADD_EXECUTABLE(rshell
