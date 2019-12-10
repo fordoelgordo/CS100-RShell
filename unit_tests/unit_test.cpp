@@ -4,6 +4,7 @@
 #include "../src/parser.hpp"
 #include "../src/testexecute.hpp"
 #include "../src/outputredirect.hpp"
+#include "../src/inputredirect.hpp"
 #include <string>
 #include <vector>
 
@@ -127,6 +128,22 @@ TEST(TestExecuteTest, dflagFail) {
     string input = "test -d ~/assignment-assign_jeff_ford/src/testexecute.hpp";
     Parser* parsed = new Parser();
     EXPECT_FALSE(parsed->execute(parsed->parse(input)));
+}
+
+// Unit test on input redirection
+TEST(TestInRedirect, CatTest) {
+    string input = "cat";
+    string output = "names.txt";    
+    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
+    InRedirect* in = new InRedirect(execute, output);
+    EXPECT_EQ(true, in->execute());
+}
+TEST(TestInRedirect, CatTest2) {
+    string input = "cat";
+    string output = "outfile";
+    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
+    InRedirect* in = new InRedirect(execute, output);
+    EXPECT_EQ(false, in->execute()); // Expect false because outfile does not exist, so nothing to concatenate
 }
 
 // Unit test on output redirection
