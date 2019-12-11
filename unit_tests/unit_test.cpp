@@ -134,15 +134,13 @@ TEST(TestExecuteTest, dflagFail) {
 TEST(TestInRedirect, CatTest) {
     string input = "cat";
     string output = "names.txt";    
-    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
-    InRedirect* in = new InRedirect(execute, output);
+    InRedirect* in = new InRedirect(input, output);
     EXPECT_EQ(true, in->execute());
 }
 TEST(TestInRedirect, CatTest2) {
     string input = "cat";
     string output = "outfile";
-    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
-    InRedirect* in = new InRedirect(execute, output);
+    InRedirect* in = new InRedirect(input, output);
     EXPECT_EQ(false, in->execute()); // Expect false because outfile does not exist, so nothing to concatenate
 }
 

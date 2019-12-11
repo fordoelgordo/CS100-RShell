@@ -195,6 +195,7 @@ bool Parser::execute(vector<string> userInput) {
     int redirectCount = 0;
     int pipeCount = 0;
     bool success = true;
+    int redirectExecute = 0;
     vector<string> evalLeft;
     vector<string> evalRight;
     vector<string> parentheses;
@@ -234,17 +235,16 @@ bool Parser::execute(vector<string> userInput) {
 		evalRight.push_back(userInput.at(i));
 	    }
 	}
-	Factory* factory = new Factory();
 	if (connectors.front() == ">" || connectors.front() == ">>") {
 	    OutRedirect* out = new OutRedirect(evalLeft.at(0), evalRight.at(0));
 	    return out->execute();
 	}
 	else if (connectors.front() == "<") {
-	    InRedirect* in = new InRedirect(factory->create_command(evalLeft.at(0), ";"), evalRight.at(0));
+	    InRedirect* in = new InRedirect(evalLeft.at(0), evalRight.at(0));
 	    return in->execute();
 	}
-    }
-	
+    }	
+
     // No connectors present in command sequence
     if (connCount == 0) {
 	Factory* factory = new Factory();

@@ -2,17 +2,18 @@
 #define __InputRedirect_HPP__
 
 #include "executecommand.hpp"
+#include "parser.hpp"
 
 using namespace std;
 
 class InRedirect : public ExecuteCommand {
     private:
-	ExecuteCommand* input;
-	string output;
+	char** command;
+	string input;
     
     public:
 	InRedirect();
-	InRedirect(ExecuteCommand* input, string output);
+	InRedirect(string command, string input);
 	virtual bool execute();
 	virtual void print_command();
 	virtual string get_command();
