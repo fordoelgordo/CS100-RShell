@@ -1,0 +1,4 @@
+pwd > output.txt
+echo "Hello World!" > output.txt
+echo "Testing double greater symbol" >> output2.txt
+exit
