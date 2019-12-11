@@ -4,15 +4,16 @@ using namespace std;
 
 // Constructors
 OutRedirect::OutRedirect() : ExecuteCommand() {}
-OutRedirect::OutRedirect(ExecuteCommand* input, string output) {
-    this->input = input;
+OutRedirect::OutRedirect(string input, string output) {
+    Parser* parser = new Parser();
+    this->command = parser->create_charstar(input);
     this->output = output;
 }
 
 // Execute() function
 bool OutRedirect::execute() {
     // Get file descriptor for output file
-    int file_desc = open(this->output.c_str(), O_CREAT | O_WRONLY /*|O_TRUNC*/, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP);
+    int file_desc = open(this->output.c_str(), O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP);
     /* Note the definition of the following flags in linux's open() command:
        O_CREAT: if pathname does not exist, it is created as a regular file
        O_WRONLY: set access mode to write only so that file can only be written to
@@ -22,22 +23,50 @@ bool OutRedirect::execute() {
        S_IWGRP: the group has write permission
        S_IWUSR: the user has write permission
     */
-    if (file_desc < 0) {
-	perror("Error opening output file");
-	return false;
-    }
+    pid_t childPid;
+    pid_t pid;
+    int status;
+    childPid = fork();
+    int saveoutput = dup(1); // Copying current stdout to saveoutput
 
-    int std = dup(1); // Duplicate fileout process
-    if(dup2(file_desc, 1) == -1) {
-	perror("Error duplicating output file to fileout");
-	return false;
+    if (childPid == 0) {
+	// In child process, replace stdout with file_desc and execute command	
+	if (file_desc < 0) {
+	    perror("Error in opening output file");
+	    exit(1);
+	}
+	dup2(file_desc, 1); // replacing stdout with output file
+	close(file_desc); // closing file descriptor
+	if (execvp(*this->command, this->command) < 0) { // Executing command
+	    perror("execvp() failed");
+	    exit(1);
+	}
     }
-    close(file_desc); // Close output file
-    dup2(file_desc, 1); // Copy file_desc to fileout (1)
-    this->input->execute(); // Execute the passed in command
-    close(std);
-    dup2(std, 1);
-
+    else if (childPid > 0) {
+	// In parent process, wait for child to finish processing, and error check
+	pid = waitpid(childPid, &status, 0);
+	if (pid == -1) {
+	    perror("Error in child processing");
+	    exit(1);
+	}
+	if (status > 0) {
+	    return false;
+	}
+	else if (status == 0) {
+	    return true;
+	}
+	else if (status == 1) {
+	    return false;
+	}
+    }
+    else {
+	// If this condition branch is reached then the fork() process failed
+	perror("fork() failed");
+	exit(1);
+    }
+    close(saveoutput); // Close fds
+    dup2(saveoutput, 1); // Copy original stdout back to stdout
+    
     return true;
 }
 

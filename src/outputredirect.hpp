@@ -8,12 +8,12 @@ using namespace std;
 
 class OutRedirect : public ExecuteCommand {
     private:
-	ExecuteCommand* input;
+	char** command;
 	string output;
 
     public:
 	OutRedirect();
-	OutRedirect(ExecuteCommand* input, string output);
+	OutRedirect(string input, string output);
 	virtual bool execute();
 	virtual void print_command();
 	virtual string get_command();

@@ -150,15 +150,13 @@ TEST(TestInRedirect, CatTest2) {
 TEST(TestOutRedirect, EchoTest) {
     string input = "echo \"Hello World!\"";
     string output = "output.txt";
-    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
-    OutRedirect* out = new OutRedirect(execute, output);
+    OutRedirect* out = new OutRedirect(input, output);
     EXPECT_EQ(true, out->execute());
 }
 TEST(TestOutRedirect, PWDOut) {
     string input = "pwd";
     string output = "outfile";
-    ExecuteCommand* execute = new Execute(create_charstar(input), ";");
-    OutRedirect* out = new OutRedirect(execute, output);
+    OutRedirect* out = new OutRedirect(input, output);
     EXPECT_EQ(true, out->execute());
 }
 

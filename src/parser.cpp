@@ -192,6 +192,8 @@ bool Parser::execute(vector<string> userInput) {
     int leftParen = 0;
     int rightParen = 0;
     int connCount = 0;
+    int redirectCount = 0;
+    int pipeCount = 0;
     bool success = true;
     vector<string> evalLeft;
     vector<string> evalRight;
@@ -208,11 +210,41 @@ bool Parser::execute(vector<string> userInput) {
 	else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") {
 	    ++connCount;
 	}
+	else if (userInput.at(i) == "<" || userInput.at(i) == ">" || userInput.at(i) == ">>") {
+	    ++redirectCount;
+	}
+	else if (userInput.at(i) == "|") {
+	    ++pipeCount;
+	}
     }
 
     // Conditional branch to check for correct parentheses, exit parsing if not
     // Need to update the parentheses check function
     
+    // No pipes in commmand string, redirect commands found
+    if (redirectCount > 0 && pipeCount == 0) {
+	for (unsigned int i = 0; i < userInput.size(); ++i) {
+	    if (userInput.at(i) == ">" || userInput.at(i) == "<" || userInput.at(i) == ">>") {
+		connectors.push(userInput.at(i));
+	    }
+	    else if (connectors.empty()) {
+		evalLeft.push_back(userInput.at(i));
+	    }
+	    else {
+		evalRight.push_back(userInput.at(i));
+	    }
+	}
+	Factory* factory = new Factory();
+	if (connectors.front() == ">" || connectors.front() == ">>") {
+	    OutRedirect* out = new OutRedirect(evalLeft.at(0), evalRight.at(0));
+	    return out->execute();
+	}
+	else if (connectors.front() == "<") {
+	    InRedirect* in = new InRedirect(factory->create_command(evalLeft.at(0), ";"), evalRight.at(0));
+	    return in->execute();
+	}
+    }
+	
     // No connectors present in command sequence
     if (connCount == 0) {
 	Factory* factory = new Factory();

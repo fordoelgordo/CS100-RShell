@@ -15,6 +15,8 @@
 #include "and.hpp"
 #include "or.hpp"
 #include "semi.hpp"
+#include "outputredirect.hpp"
+#include "inputredirect.hpp"
 
 using namespace std;
 
@@ -23,8 +25,9 @@ class Parser {
 	Parser();
 	vector<string> parse(string userInput);
 	bool execute(vector<string> userInput);
-    protected:
 	char** create_charstar(const string & input);
+
+    protected:
 	vector<string> create_stringvec(const string & input);
     	void print_charstar(char** input);	
 	void print_vector(const vector<string> & vec); // Helper function to quickly print command vector for debugging purposes
