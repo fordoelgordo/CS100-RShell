@@ -3,10 +3,34 @@
 #include "../src/executecommand.hpp"
 #include "../src/parser.hpp"
 #include "../src/testexecute.hpp"
+#include "../src/outputredirect.hpp"
+#include "../src/inputredirect.hpp"
+#include "../src/pipe.hpp"
 #include <string>
 #include <vector>
 
 using namespace std;
+
+char** create_charstar(const string & input) {
+    char* cmd;
+    vector<char*> args;
+    char* temp;
+    cmd = (char*)input.c_str();
+    temp = strtok(cmd, " ");
+    while (temp != NULL) {
+	if (temp != '\0') {
+	    args.push_back(temp);
+	}
+	temp = strtok(NULL, " ");
+    }
+    char** arguments = new char*[args.size() + 1];
+    for (unsigned int i = 0; i < args.size(); ++i) {
+	arguments[i] = args.at(i);
+    }
+    arguments[args.size()] = NULL;
+    
+    return arguments;
+}
 
 // Unit tests on Parser class, which tests user input parsing functionality
 TEST(ParserTest, SimpleCommand) {
@@ -105,6 +129,42 @@ TEST(TestExecuteTest, dflagFail) {
     string input = "test -d ~/assignment-assign_jeff_ford/src/testexecute.hpp";
     Parser* parsed = new Parser();
     EXPECT_FALSE(parsed->execute(parsed->parse(input)));
+}
+
+// Unit test on input redirection
+TEST(TestInRedirect, CatTest) {
+    string input = "cat";
+    string output = "names.txt";    
+    InRedirect* in = new InRedirect(input, output);
+    EXPECT_EQ(true, in->execute());
+}
+TEST(TestInRedirect, CatTest2) {
+    string input = "cat";
+    string output = "outfile";
+    InRedirect* in = new InRedirect(input, output);
+    EXPECT_EQ(false, in->execute()); // Expect false because outfile does not exist, so nothing to concatenate
+}
+
+// Unit test on output redirection
+TEST(TestOutRedirect, EchoTest) {
+    string input = "echo \"Hello World!\"";
+    string output = "output.txt";
+    OutRedirect* out = new OutRedirect(input, output);
+    EXPECT_EQ(true, out->execute());
+}
+TEST(TestOutRedirect, PWDOut) {
+    string input = "pwd";
+    string output = "outfile";
+    OutRedirect* out = new OutRedirect(input, output);
+    EXPECT_EQ(true, out->execute());
+}
+
+// Unit test on piping
+TEST(TestPiping, SpecTest) {
+    string input = "cat < names.txt | tr A-Z a-z | tee output1.txt | tr a-z A-Z > output2.txt";
+    Parser* parser = new Parser();
+    Pipe* p = new Pipe(parser->parse(input));
+    EXPECT_EQ(true, p->execute());
 }
 
 // main() function to execute tests 

@@ -4,10 +4,12 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <unistd.h> // To use the execvp() function
+#include <unistd.h> // To use the execvp(), dup() and dup2() functions
 #include <sys/wait.h> // To execute waitpid() command which allows the parent process to wait for the child
 #include <sys/stat.h> // To execute stat() command which is used to check if a file path exists or not
 #include <cstring> // To use strcpy command
+#include <sys/types.h> // Needed to use open() linux command
+#include <fcntl.h>
 
 using namespace std;
 

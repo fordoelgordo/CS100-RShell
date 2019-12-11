@@ -1,0 +1,5 @@
+cat < CMakeLists.txt
+cat < README.md
+cat < names.txt
+cat < testtesttest
+exit

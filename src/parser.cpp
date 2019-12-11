@@ -71,6 +71,16 @@ vector<string> Parser:: parse(string userInput) {
 	}
     }
     
+    // Erase the "single" connectors that follow the double connectors
+    for (unsigned int i = 0; i < finalCommands.size(); ++i) {
+	if (finalCommands.at(i) == "||" && finalCommands.at(i + 1) == "|") {
+	    finalCommands.erase(finalCommands.begin() + i + 1, finalCommands.begin() + i + 2);
+	}
+	if (finalCommands.at(i) == "&&" && finalCommands.at(i + 1) == "&") {
+	    finalCommands.erase(finalCommands.begin() + i + 1, finalCommands.begin() + i + 2);
+	}
+    }    
+    
     // Parse out comments
     int index = -1;
     bool found = false;
@@ -91,10 +101,10 @@ vector<string> Parser:: parse(string userInput) {
     }   
 
     // Remove all instance of a single "&" and "|"
-    finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
-    finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
+    // Implemented fix above: finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "&"), finalCommands.end());
+    // Implemneted fix above: finalCommands.erase(std::remove(finalCommands.begin(), finalCommands.end(), "|"), finalCommands.end());
  
-    // Parse out parentheses, place on separate lines
+    // Parse out parentheses, < , >, >> place on separate lines
     vector<string> finalCommands2;
     stack<string> temp;
     for (unsigned int i = 0; i < finalCommands.size(); ++i) {
@@ -124,14 +134,48 @@ vector<string> Parser:: parse(string userInput) {
 	}
     }
 
+    typedef boost::tokenizer<boost::char_separator<char> > redirection;
+    boost::char_separator<char> delim2("", "<>"); // Parse on & | and ; but keep these tokens in the output
+    vector<string> finalCommands3;
+    for (int i = 0; i < finalCommands2.size(); ++i) {
+	redirection tokens(finalCommands2.at(i), delim2);
+	for (redirection::iterator iter = tokens.begin(); iter != tokens.end(); ++iter) {
+	    string redirect = *iter;
+	    finalCommands3.push_back(redirect);
+	}
+    }
+    
+    // Link separated >> together
+    for (unsigned int i = 0; i < finalCommands3.size() - 1; ++i) {
+	if (finalCommands3.at(i) == ">" && finalCommands3.at(i + 1) == ">") {
+	    finalCommands3.at(i) += finalCommands3.at(i + 1);
+	    ++i;
+	}
+    }
+
+    // Erase the "single" connectors that follow the double connectors
+    for (unsigned int i = 0; i < finalCommands3.size(); ++i) {
+	if (finalCommands3.at(i) == ">>" && finalCommands3.at(i + 1) == ">") {
+	    finalCommands3.erase(finalCommands3.begin() + i + 1, finalCommands3.begin() + i + 2);
+	}
+    }
+    
+    // Remove leading and trailing white space introduced from second parsing
+    for (unsigned int i = 0; i < finalCommands3.size(); ++i) {
+	if (finalCommands3.at(i).find("\"") == string::npos) {
+	    finalCommands3.at(i) = regex_replace(finalCommands3.at(i), regex("^ +"), "");
+	    finalCommands3.at(i) = regex_replace(finalCommands3.at(i), regex(" +$"), "");
+	}
+    }
+    
     // Check for matching parentheses
     int leftParen = 0;
     int rightParen = 0;
-    for (unsigned int i = 0; i < finalCommands2.size(); ++i) {
-	if (finalCommands2.at(i) == ")") {
+    for (unsigned int i = 0; i < finalCommands3.size(); ++i) {
+	if (finalCommands3.at(i) == ")") {
 	    ++rightParen;
 	}
-	if (finalCommands2.at(i) == "(") {
+	if (finalCommands3.at(i) == "(") {
 	    ++leftParen;
 	}
     }
@@ -141,14 +185,17 @@ vector<string> Parser:: parse(string userInput) {
 	exit(1);
     }
     
-    return finalCommands2;
+    return finalCommands3;
 }
 bool Parser::execute(vector<string> userInput) {
     // Evaluate connectors 
     int leftParen = 0;
     int rightParen = 0;
     int connCount = 0;
+    int redirectCount = 0;
+    int pipeCount = 0;
     bool success = true;
+    int redirectExecute = 0;
     vector<string> evalLeft;
     vector<string> evalRight;
     vector<string> parentheses;
@@ -164,11 +211,43 @@ bool Parser::execute(vector<string> userInput) {
 	else if (userInput.at(i) == "&&" || userInput.at(i) == "||" || userInput.at(i) == ";") {
 	    ++connCount;
 	}
+	else if (userInput.at(i) == "<" || userInput.at(i) == ">" || userInput.at(i) == ">>") {
+	    ++redirectCount;
+	}
+	else if (userInput.at(i) == "|") {
+	    ++pipeCount;
+	}
+    }
+ 
+    // No pipes in commmand string, redirect commands found
+    if (redirectCount > 0 && pipeCount == 0) {
+	for (unsigned int i = 0; i < userInput.size(); ++i) {
+	    if (userInput.at(i) == ">" || userInput.at(i) == "<" || userInput.at(i) == ">>") {
+		connectors.push(userInput.at(i));
+	    }
+	    else if (connectors.empty()) {
+		evalLeft.push_back(userInput.at(i));
+	    }
+	    else {
+		evalRight.push_back(userInput.at(i));
+	    }
+	}
+	if (connectors.front() == ">" || connectors.front() == ">>") {
+	    OutRedirect* out = new OutRedirect(evalLeft.at(0), evalRight.at(0));
+	    return out->execute();
+	}
+	else if (connectors.front() == "<") {
+	    InRedirect* in = new InRedirect(evalLeft.at(0), evalRight.at(0));
+	    return in->execute();
+	}
+    }
+    
+    // Pipes encountered in the commands
+    if (pipeCount > 0) {
+	Pipe* p = new Pipe(userInput);
+	return p->execute();
     }
 
-    // Conditional branch to check for correct parentheses, exit parsing if not
-    // Need to update the parentheses check function
-    
     // No connectors present in command sequence
     if (connCount == 0) {
 	Factory* factory = new Factory();

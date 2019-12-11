@@ -1,0 +1,6 @@
+pwd | cat
+cat < names.txt | tr A-Z a-z | tee output1 | tr a-z A-Z > output2
+cat < names.txt | tee output3
+echo "Redirecting this input to file test" > test.txt
+cat < test.txt | tr a-z A-Z | wc > test2.txt
+exit
