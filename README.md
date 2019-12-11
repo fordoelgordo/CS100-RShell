@@ -7,7 +7,7 @@ Jeffreyson Nguyen, 862154834
 The compiled code generates an executable "rshell" that emulates command shell functionality.  The rshell currently supports commands availabile through the PATH variable, the "test" command (and it's symbolic equivalent []) along with user-passed flags which test for file and directory existence, precedence evaluation using parentheses, and chained execution of supported commands using the connectors &&, || and ;.  Additionally, the shell can handle input redirection using the symbol "<", output redirection using the symbols ">" and ">>" as well as piping ("|") to chain executable commands together.  As with a normal command shell, users can enter any number of commands in infinitum until "exit" is entered which effectively exits the shell.  Initial input validation is only performed on the correct passing of precedence operators.  Otherwise, invalid user input is accepted (e.g un-executable commands) at which point the program will terminate upon failure to excute.
 
 ## Diagram
-![OMT Diagram](https://github.com/cs100/assignment-assign_jeff_ford/blob/master/images/Rshell%20OMT%20.png)
+[OMT Diagram](https://github.com/cs100/assignment-assign_jeff_ford/blob/master/images/Rshell%20OMT%20.png)
 
 ## Classes
 * ExecuteCommand
