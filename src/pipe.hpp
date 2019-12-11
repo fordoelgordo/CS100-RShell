@@ -17,7 +17,6 @@ class Pipe : public ExecuteCommand {
 	Pipe();
 	Pipe(vector<string> commands);
 	virtual bool execute();
-	bool executePipes(string left, string right); // helper function for Pipe class' execute()
 	virtual void print_command();
 	virtual string get_command();
 	virtual string get_command_full();
