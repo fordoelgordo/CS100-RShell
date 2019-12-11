@@ -218,10 +218,7 @@ bool Parser::execute(vector<string> userInput) {
 	    ++pipeCount;
 	}
     }
-
-    // Conditional branch to check for correct parentheses, exit parsing if not
-    // Need to update the parentheses check function
-    
+ 
     // No pipes in commmand string, redirect commands found
     if (redirectCount > 0 && pipeCount == 0) {
 	for (unsigned int i = 0; i < userInput.size(); ++i) {
@@ -243,7 +240,13 @@ bool Parser::execute(vector<string> userInput) {
 	    InRedirect* in = new InRedirect(evalLeft.at(0), evalRight.at(0));
 	    return in->execute();
 	}
-    }	
+    }
+    
+    // Pipes encountered in the commands
+    if (pipeCount > 0) {
+	Pipe* p = new Pipe(userInput);
+	return p->execute();
+    }
 
     // No connectors present in command sequence
     if (connCount == 0) {

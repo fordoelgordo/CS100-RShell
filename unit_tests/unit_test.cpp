@@ -5,6 +5,7 @@
 #include "../src/testexecute.hpp"
 #include "../src/outputredirect.hpp"
 #include "../src/inputredirect.hpp"
+#include "../src/pipe.hpp"
 #include <string>
 #include <vector>
 
@@ -156,6 +157,14 @@ TEST(TestOutRedirect, PWDOut) {
     string output = "outfile";
     OutRedirect* out = new OutRedirect(input, output);
     EXPECT_EQ(true, out->execute());
+}
+
+// Unit test on piping
+TEST(TestPiping, SpecTest) {
+    string input = "cat < names.txt | tr A-Z a-z | tee output1.txt | tr a-z A-Z > output2.txt";
+    Parser* parser = new Parser();
+    Pipe* p = new Pipe(parser->parse(input));
+    EXPECT_EQ(true, p->execute());
 }
 
 // main() function to execute tests 

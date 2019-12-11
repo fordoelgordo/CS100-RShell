@@ -18,6 +18,7 @@ ADD_EXECUTABLE(test
     ${PROJECT_BINARY_DIR}/factory.cpp
     ${PROJECT_BINARY_DIR}/outputredirect.cpp
     ${PROJECT_BINARY_DIR}/inputredirect.cpp
+    ${PROJECT_BINARY_DIR}/pipe.cpp
 )
 
 ADD_EXECUTABLE(rshell
@@ -30,6 +31,9 @@ ADD_EXECUTABLE(rshell
     ${PROJECT_BINARY_DIR}/semi.cpp
     ${PROJECT_BINARY_DIR}/exit.cpp
     ${PROJECT_BINARY_DIR}/factory.cpp
+    ${PROJECT_BINARY_DIR}/outputredirect.cpp
+    ${PROJECT_BINARY_DIR}/inputredirect.cpp
+    ${PROJECT_BINARY_DIR}/pipe.cpp
 )
 
 TARGET_LINK_LIBRARIES(test gtest)

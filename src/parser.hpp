@@ -17,6 +17,7 @@
 #include "semi.hpp"
 #include "outputredirect.hpp"
 #include "inputredirect.hpp"
+#include "pipe.hpp"
 
 using namespace std;
 
