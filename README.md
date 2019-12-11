@@ -4,7 +4,7 @@ Ford St. John, 862125078
 Jeffreyson Nguyen, 862154834
 
 ## Introduction
-The compiled code generates an executable "rshell" that emulates command shell functionality.  The rshell currently supports commands availabile through the PATH variable, the "test" command (and it's symbolic equivalent []) along with user-passed flags which test for file and directory existence, precedence evaluation using parentheses, and chained execution of supported commands using the connectors &&, || and ;.  As with a normal command shell, users can enter any number of commands in infinitum until "exit" is entered which effectively exits the shell.  Initial input validation is only performed on the correct passing of precedence operators.  Otherwise, invalid user input is accepted (e.g un-executable commands) at which point the program will terminate upon failure to excute.
+The compiled code generates an executable "rshell" that emulates command shell functionality.  The rshell currently supports commands availabile through the PATH variable, the "test" command (and it's symbolic equivalent []) along with user-passed flags which test for file and directory existence, precedence evaluation using parentheses, and chained execution of supported commands using the connectors &&, || and ;.  Additionally, the shell can handle input redirection using the symbol "<", output redirection using the symbols ">" and ">>" as well as piping ("|") to chain executable commands together.  As with a normal command shell, users can enter any number of commands in infinitum until "exit" is entered which effectively exits the shell.  Initial input validation is only performed on the correct passing of precedence operators.  Otherwise, invalid user input is accepted (e.g un-executable commands) at which point the program will terminate upon failure to excute.
 
 ## Diagram
 ![OMT Diagram](https://github.com/cs100/assignment-assign_jeff_ford/blob/master/images/Rshell%20OMT%20.png)
@@ -18,6 +18,12 @@ The compiled code generates an executable "rshell" that emulates command shell f
   * Child of ExecuteCommand, implements all executables associated with the PATH environment variable utilizing execvp(), waitpid() and fork()
 * TestExecute
   * Child of ExecuteCommand, implements the "test" functionality which tests for the existence of a file or directory utilizing the stat() function.  This class also implements the abstract command "[]" which the user can pass to instantitate a "test" command.  This class checks for user-passed flags (-e, -d, -f) and analyzes the existence of the file or directory accordingly utilizing the S_ISREG and S_ISDIR functions.  Assumes that if no flag is expressely passed, default to the -e flag
+* InRedirect
+  * Child of ExecuteCommand, implements input redirection via dup() and dup2()
+* OutRedirect
+  * Child of ExecuteCommand, implement output redirection via dup and dup2()
+* Pipe
+  * Child of ExecuteCommand, handles chained executables using pipe() as well as input and output redirection chained together with |
 * Parser
   * Has parse() method which parses a user-entered string and returns a vector<string> which the ExecuteCommand subclasses can utilize to execute commands.  The parse method accounts for the precedence operators, comments (#), quotation marks (" ") and connectors (&& || ;)
   * Has execute() method which takes the vector<string> of parsed user input and executes the entered commands
